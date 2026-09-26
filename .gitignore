@@ -1,0 +1,42 @@
+# --- Secrets & environment ---
+.env
+*.env
+!*.env.example
+!**/.env.example
+secrets.env
+**/appsettings.*.local.json
+
+# --- Runtime media & storage (never in git) ---
+storage/media/*
+!storage/media/.gitkeep
+storage/backups/*
+storage/exports/*
+logs/*
+!logs/.gitkeep
+
+# --- Build outputs ---
+node_modules/
+dist/
+**/dist/
+bin/
+obj/
+out/
+publish/
+*.user
+
+# --- Odoo ---
+*.pyc
+__pycycache__/
+**/__pycache__/
+*.egg-info/
+.venv/
+
+# --- Tooling caches ---
+.angular/
+.vscode/
+.idea/
+*.log
+
+# --- OS ---
+.DS_Store
+Thumbs.db

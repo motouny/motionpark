@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
     <section class="auth-page">
       <div class="bg" aria-hidden="true"></div>
       <div class="card">
-        <img src="assets/brand/symbol.svg" alt="Motion Park" width="52" height="52" />
+        <img src="assets/brand/motion-park-symbol.svg" alt="Motion Park" width="52" height="52" />
         <h1>{{ title }}</h1>
         @if (subtitle) { <p class="subtitle">{{ subtitle }}</p> }
         <ng-content />

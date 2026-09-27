@@ -1,0 +1,8 @@
+<svg width="1600" height="500" viewBox="0 0 1600 500" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Motion Park horizontal light logo</title>
+  <desc id="desc">An energetic gradient ribbon mark and white Motion Park wordmark for dark backgrounds.</desc>
+  <defs><linearGradient id="motion" x1="58" y1="97" x2="395" y2="362" gradientUnits="userSpaceOnUse"><stop stop-color="#FF7A00"/><stop offset="0.42" stop-color="#FF4081"/><stop offset="1" stop-color="#8A2BE2"/></linearGradient></defs>
+  <path d="M52 363L179 126C189 108 205 96 225 93C244 90 263 97 276 112L345 194L435 104L482 157L366 281C354 293 338 300 321 300C303 300 287 292 276 278L217 208L154 328L52 363Z" fill="url(#motion)"/>
+  <text x="540" y="262" fill="#F5F5F7" font-family="Sora, Tajawal, Arial, sans-serif" font-size="176" font-weight="800" letter-spacing="-8">MOTION</text>
+  <text x="550" y="406" fill="#FF7A00" font-family="Sora, Tajawal, Arial, sans-serif" font-size="70" font-weight="700" letter-spacing="28">PARK</text>
+</svg>

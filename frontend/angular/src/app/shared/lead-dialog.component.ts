@@ -18,7 +18,7 @@ import { IconComponent } from './icon.component';
             <app-icon name="close" size="1rem" />
           </button>
 
-          <img src="assets/brand/symbol.svg" alt="" width="48" height="48" />
+          <img src="assets/brand/motion-park-symbol.svg" alt="" width="48" height="48" />
           <p class="badge">{{ i18n.t('leadDialog.badge') }}</p>
           <h2 class="title">{{ i18n.t('leadDialog.title') }}</h2>
           <p class="subtitle">{{ i18n.t('leadDialog.subtitle') }}</p>

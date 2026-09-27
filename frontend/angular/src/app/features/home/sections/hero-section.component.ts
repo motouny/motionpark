@@ -12,13 +12,17 @@ interface HeroStat { value: string; outOf: string; label: string }
   imports: [IconComponent, LeadDialogComponent],
   template: `
     <section class="hero" id="top">
-      <div class="hero-art" aria-hidden="true">
-        <div class="hero-grid"></div>
-        <div class="orbit orbit-one"></div>
-        <div class="orbit orbit-two"></div>
-        <div class="blob blob-a"></div>
-        <div class="blob blob-b"></div>
-      </div>
+      <picture class="hero-media" aria-hidden="true">
+        <source type="image/webp"
+          srcset="assets/images/motion-park-hero-800.webp 800w, assets/images/motion-park-hero-1440.webp 1440w, assets/images/motion-park-hero-2560.webp 2560w"
+          sizes="100vw" />
+        <img
+          src="assets/images/motion-park-hero-1440.jpg"
+          srcset="assets/images/motion-park-hero-800.jpg 800w, assets/images/motion-park-hero-1440.jpg 1440w, assets/images/motion-park-hero-2560.jpg 2560w"
+          sizes="100vw" width="2560" height="1440" alt="" fetchpriority="high" decoding="async" />
+      </picture>
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-glow" aria-hidden="true"></div>
 
       <div class="container hero-inner">
         <div class="hero-copy">
@@ -64,53 +68,52 @@ interface HeroStat { value: string; outOf: string; label: string }
     .hero {
       position: relative;
       overflow: hidden;
-      min-height: 780px;
-      background: var(--background);
+      min-height: min(100svh, 920px);
+      background: var(--mp-ink);
       padding-top: 76px;
+      isolation: isolate;
     }
-    .hero-art {
-      position: absolute; inset: 0;
-      .hero-grid {
-        position: absolute; inset: 0; opacity: .5;
-        background-image:
-          linear-gradient(rgba(245,245,247,.055) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(245,245,247,.055) 1px, transparent 1px);
-        background-size: 68px 68px;
-        mask-image: linear-gradient(to left, black, transparent 68%);
+    /* The athlete sits on the physical right of the photo; the copy always takes the dark left side. */
+    .hero-media {
+      position: absolute; inset: 0; z-index: -2;
+      img {
+        width: 100%; height: 100%;
+        object-fit: cover; object-position: 72% 30%;
+        animation: hero-in 1.6s var(--ease-out) both;
       }
-      .orbit {
-        position: absolute; border-radius: 9999px; pointer-events: none;
-      }
-      .orbit-one {
-        inset-inline-end: -70px; top: 155px;
-        width: 500px; height: 500px;
-        border: 1px solid rgba(255,255,255,.12);
-        box-shadow: inset 0 0 120px rgba(255,64,129,.08);
-        transform: rotate(-20deg);
-        animation: drift 12s ease-in-out infinite alternate;
-      }
-      .orbit-two {
-        inset-inline-end: 150px; bottom: -170px;
-        width: 310px; height: 310px;
-        border: 34px solid rgba(138,43,226,.18);
-        animation: drift 9s ease-in-out infinite alternate-reverse;
-      }
-      .blob { position: absolute; border-radius: 50%; filter: blur(90px); }
-      .blob-a { width: 420px; height: 420px; inset-inline-end: 8%; top: 22%; background: radial-gradient(circle, rgba(255,64,129,.24), transparent 65%); }
-      .blob-b { width: 360px; height: 360px; inset-inline-end: 24%; top: 44%; background: radial-gradient(circle, rgba(138,43,226,.26), transparent 65%); }
     }
-    @keyframes drift {
-      from { transform: rotate(-20deg) translate3d(0, 0, 0); }
-      to { transform: rotate(-8deg) translate3d(-10px, 12px, 0); }
+    .hero-shade {
+      position: absolute; inset: 0; z-index: -1;
+      background:
+        linear-gradient(90deg, rgba(18,18,24,.92) 0%, rgba(18,18,24,.7) 34%, rgba(18,18,24,.12) 62%, transparent 78%),
+        linear-gradient(0deg, var(--mp-ink) 0%, rgba(18,18,24,0) 28%),
+        linear-gradient(180deg, rgba(18,18,24,.65) 0%, rgba(18,18,24,0) 22%);
+    }
+    .hero-glow {
+      position: absolute; z-index: -1; pointer-events: none;
+      width: 520px; height: 520px; left: -160px; bottom: -220px;
+      border-radius: 50%; filter: blur(110px); opacity: .35;
+      background: var(--mp-gradient);
+    }
+    @keyframes hero-in {
+      from { opacity: 0; transform: scale(1.06); }
+      to { opacity: 1; transform: scale(1); }
     }
     .hero-inner {
       position: relative;
       display: flex;
       align-items: center;
-      min-height: 704px;
-      padding-block: 5rem;
+      /* physical left in both directions (the photo's negative space) */
+      justify-content: flex-end;
+      min-height: calc(min(100svh, 920px) - 76px);
+      padding-block: 5rem 6.5rem;
     }
-    .hero-copy { max-width: 640px; }
+    :host-context([dir='ltr']) .hero-inner { justify-content: flex-start; }
+    .hero-copy { max-width: 600px; animation: copy-in .9s .15s var(--ease-out) both; }
+    @keyframes copy-in {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: none; }
+    }
     .badge {
       display: inline-flex; align-items: center; gap: .55rem;
       border-radius: 9999px;
@@ -161,13 +164,22 @@ interface HeroStat { value: string; outOf: string; label: string }
       color: rgba(245,245,247,.4);
       .line { height: 1px; width: 6rem; background: linear-gradient(to left, #FF4081, transparent); }
     }
-    @media (max-width: 640px) {
-      .hero { min-height: 725px; }
-      .orbit-one { width: 340px; height: 340px; top: 185px; inset-inline-end: -150px; }
-      .orbit-two { inset-inline-end: -70px; bottom: -70px; }
+    /* Phones: the photo takes the top of the screen and the copy sits below it on ink. */
+    @media (max-width: 767px) {
+      .hero { min-height: 0; }
+      .hero-media { bottom: auto; height: 480px; }
+      .hero-media { top: 36px; }
+      .hero-media img { object-position: 76% 0%; }
+      .hero-shade {
+        bottom: auto; height: 480px;
+        background: linear-gradient(0deg, var(--mp-ink) 0%, rgba(18,18,24,.35) 38%, rgba(18,18,24,.1) 65%, rgba(18,18,24,.6) 100%);
+      }
+      .hero-inner { min-height: 0; align-items: flex-start; padding-block: 330px 4.5rem; }
+      .stats { gap: 1.25rem; margin-top: 2.5rem; }
+      .scroll-hint { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .orbit { animation: none; }
+      .hero-media img, .hero-copy { animation: none; }
     }
   `,
 })

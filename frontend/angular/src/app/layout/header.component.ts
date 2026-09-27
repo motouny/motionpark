@@ -16,7 +16,7 @@ import { ToastService } from '../shared/toast.service';
     <header class="site-header" [class.solid]="scrolled() || menuOpen()">
       <div class="bar container">
         <a routerLink="/" class="brand" [attr.aria-label]="'Motion Park — ' + i18n.t('nav.home')">
-          <img src="assets/brand/logo-light.svg" alt="Motion Park" height="46" width="187" />
+          <img src="assets/brand/motion-park-logo-light.svg" alt="Motion Park" height="46" width="147" />
         </a>
 
         <nav class="desktop-nav" [attr.aria-label]="i18n.t('nav.home')">

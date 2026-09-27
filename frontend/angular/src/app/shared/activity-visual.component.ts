@@ -2,15 +2,22 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { IconComponent } from './icon.component';
 
 /**
- * On-brand gradient artwork for activity cards — pure CSS per
- * docs/ASSET_INVENTORY.md (no stock imagery, zero broken images).
+ * Activity card artwork: the approved campaign photos for swimming and group classes,
+ * on-brand gradient art for the rest (no stock imagery).
  */
 @Component({
   selector: 'app-activity-visual',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [IconComponent],
   template: `
-    <div class="visual" [class]="'visual visual-' + variant" aria-hidden="true">
+    <div class="visual" [class]="'visual visual-' + variant + (photo ? ' visual-' + variant + '-photo' : '')" aria-hidden="true">
+      @if (photo; as p) {
+        <picture class="photo">
+          <source type="image/webp" [attr.srcset]="p + '-640.webp 640w, ' + p + '-1040.webp 1040w'" sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" />
+          <img [src]="p + '-640.jpg'" [attr.srcset]="p + '-640.jpg 640w, ' + p + '-1040.jpg 1040w'"
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" width="1040" height="1300" alt="" loading="lazy" decoding="async" />
+        </picture>
+      }
       <span class="glow"></span>
       <span class="ring"></span>
       <span class="chip"><app-icon [name]="icon" size="1.35rem" /></span>
@@ -59,6 +66,17 @@ import { IconComponent } from './icon.component';
       }
     }
 
+    .photo {
+      position: absolute; inset: 0;
+      img {
+        width: 100%; height: 100%; object-fit: cover; object-position: center 40%;
+        transition: transform 700ms var(--ease-out);
+      }
+    }
+    :host-context(a:hover) .photo img, :host-context(a:focus-visible) .photo img { transform: scale(1.05); }
+    .visual-swim-photo .ring, .visual-group-photo .ring { display: none; }
+    .visual-swim-photo .glow, .visual-group-photo .glow { opacity: .22; }
+
     .visual-swim {
       background: linear-gradient(160deg, #0e3a4d 0%, #14657d 45%, #12121c 100%);
       .glow { background: #22d3ee; }
@@ -86,6 +104,12 @@ import { IconComponent } from './icon.component';
 export class ActivityVisualComponent {
   @Input() slug = '';
   @Input() icon = 'sparkles';
+
+  /** Base path of the campaign photo for this activity, when there is one. */
+  get photo(): string | null {
+    const v = this.variant;
+    return v === 'swim' || v === 'group' ? `assets/images/motion-park-${v}` : null;
+  }
 
   get variant(): string {
     if (this.slug.includes('swim')) return 'swim';

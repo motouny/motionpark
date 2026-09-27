@@ -18,10 +18,16 @@ interface StoryValue {
     <section id="story" class="light-surface section">
       <div class="container grid">
         <div class="visual">
-          <div class="art" aria-hidden="true">
-            <div class="art-gradient"></div>
-            <div class="art-ring"></div>
-            <div class="float-card">
+          <div class="art">
+            <picture>
+              <source type="image/webp" srcset="assets/images/motion-park-group-640.webp 640w, assets/images/motion-park-group-1040.webp 1040w" sizes="(min-width: 1024px) 560px, 100vw" />
+              <img src="assets/images/motion-park-group-1040.jpg"
+                srcset="assets/images/motion-park-group-640.jpg 640w, assets/images/motion-park-group-1040.jpg 1040w"
+                sizes="(min-width: 1024px) 560px, 100vw" width="1040" height="1300" loading="lazy" decoding="async"
+                [alt]="i18n.t('homeStory.photoAlt')" />
+            </picture>
+            <div class="art-shade" aria-hidden="true"></div>
+            <div class="float-card" aria-hidden="true">
               <span class="float-icon"><app-icon name="heart" size="1.25rem" /></span>
               <span>
                 <strong>{{ i18n.t('homeStory.cardTitle') }}</strong>
@@ -71,20 +77,11 @@ interface StoryValue {
         radial-gradient(circle at 20% 85%, rgba(138,43,226,.35), transparent 45%),
         linear-gradient(30deg, rgba(18,18,24,.1), rgba(18,18,24,.78)),
         linear-gradient(150deg, #2a1a3e, #12121a 70%);
-      .art-gradient {
-        position: absolute; inset: 10% 18% 0 auto;
-        width: 46%;
-        border-radius: 100% 100% 0 0;
-        background: linear-gradient(160deg, #ff9a50, #ff4081 55%, #6d2ae2);
-        opacity: .92;
-        transform: skewX(-12deg);
-      }
-      .art-ring {
-        position: absolute; inset-inline-end: 23%; top: 18%;
-        width: 28%; height: 55%;
-        border-radius: 50% 50% 38% 38%;
-        border: 2px solid rgba(245,245,247,.45);
-        transform: rotate(14deg);
+      picture, img { position: absolute; inset: 0; width: 100%; height: 100%; }
+      img { object-fit: cover; object-position: center 35%; }
+      .art-shade {
+        position: absolute; inset: 0;
+        background: linear-gradient(0deg, rgba(18,18,24,.75) 0%, rgba(18,18,24,0) 45%);
       }
       .float-card {
         position: absolute; inset-inline: 1.5rem; bottom: 1.5rem;

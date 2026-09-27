@@ -12,7 +12,7 @@ import { IconComponent } from '../shared/icon.component';
       <div class="container">
         <div class="grid">
           <div>
-            <img src="assets/brand/logo-light.svg" alt="Motion Park" height="56" width="228" />
+            <img src="assets/brand/motion-park-logo-light.svg" alt="Motion Park" height="56" width="179" />
             <p class="tagline">{{ i18n.t('footer.tagline') }}</p>
           </div>
           <div>

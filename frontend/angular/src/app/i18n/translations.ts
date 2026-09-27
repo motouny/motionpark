@@ -108,6 +108,7 @@ const ar: Dict = {
     seatsOneEn: '1 seat left',
   },
   homeStory: {
+    photoAlt: 'أربع سيدات يتمرّن ويضحكن معاً في استوديو موشن بارك',
     eyebrow: 'فلسفة موشن بارك',
     titleA: 'مكان تتحول فيه',
     titleB: 'الحركة إلى',
@@ -541,6 +542,7 @@ const en: Dict = {
     seatsOneEn: '1 seat left',
   },
   homeStory: {
+    photoAlt: 'Four women warming up and laughing together in a Motion Park studio',
     eyebrow: 'The Motion Park philosophy',
     titleA: 'A place where movement',
     titleB: 'turns into',

@@ -9,6 +9,7 @@ import { EmptyComponent } from '../../../shared/empty.component';
 import { createLoader } from '../../../core/loader';
 import { ScheduleEntry } from '../../../models';
 import { localDate } from '../../../core/dates';
+import { FALLBACK_SCHEDULE } from '../../../core/fallback-data';
 import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
 
 /** Day pill model for the homepage schedule preview. */
@@ -161,7 +162,11 @@ export class ScheduleSectionComponent {
     [],
   );
 
-  protected readonly entries = computed(() => this.loader.data());
+  /** Days with nothing published yet show the sample classes, so visitors always see what a day looks like. */
+  protected readonly entries = computed(() => {
+    const real = this.loader.data();
+    return real.length ? real : FALLBACK_SCHEDULE;
+  });
 
   constructor() {
     this.selectDay(this.days()[0]);

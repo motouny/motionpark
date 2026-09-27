@@ -47,7 +47,7 @@ interface HeroStat { value: string; outOf: string; label: string }
           <dl class="stats">
             @for (stat of stats(); track $index) {
               <div>
-                <dt>{{ stat.value }}@if (stat.outOf) {<span class="slash">{{ stat.outOf }}</span>}</dt>
+                <dt dir="ltr">{{ stat.value }}@if (stat.outOf) {<span class="slash">{{ stat.outOf }}</span>}</dt>
                 <dd>{{ stat.label }}</dd>
               </div>
             }
@@ -149,6 +149,7 @@ interface HeroStat { value: string; outOf: string; label: string }
       .slash { color: #FF7A00; font-size: 1.1rem; }
       dd { margin: .2rem 0 0; font-size: .88rem; color: rgba(245,245,247,.55); }
     }
+    :host-context([dir='rtl']) .stats dt { text-align: right; }
     .scroll-hint {
       position: absolute; bottom: 1.75rem; inset-inline: 1.25rem;
       display: flex; align-items: center; justify-content: space-between;

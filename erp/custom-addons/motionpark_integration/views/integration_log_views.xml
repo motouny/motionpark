@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="motionpark_integration_log_view_list" model="ir.ui.view">
+        <field name="name">motionpark.integration.log.list</field>
+        <field name="model">motionpark.integration.log</field>
+        <field name="arch" type="xml">
+            <list string="Integration Logs">
+                <field name="create_date"/>
+                <field name="direction"/>
+                <field name="entity"/>
+                <field name="operation"/>
+                <field name="local_id"/>
+                <field name="odoo_id"/>
+                <field name="status"/>
+                <field name="attempt"/>
+                <field name="transaction_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="motionpark_integration_log_view_form" model="ir.ui.view">
+        <field name="name">motionpark.integration.log.form</field>
+        <field name="model">motionpark.integration.log</field>
+        <field name="arch" type="xml">
+            <form string="Integration Log">
+                <sheet>
+                    <group>
+                        <group string="Request">
+                            <field name="direction"/>
+                            <field name="entity"/>
+                            <field name="operation"/>
+                            <field name="transaction_id"/>
+                        </group>
+                        <group string="Result">
+                            <field name="status"/>
+                            <field name="attempt"/>
+                            <field name="local_id"/>
+                            <field name="odoo_id"/>
+                        </group>
+                    </group>
+                    <group string="Error">
+                        <field name="error"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="motionpark_integration_log_view_search" model="ir.ui.view">
+        <field name="name">motionpark.integration.log.search</field>
+        <field name="model">motionpark.integration.log</field>
+        <field name="arch" type="xml">
+            <search string="Integration Logs">
+                <field name="entity"/>
+                <field name="operation"/>
+                <field name="transaction_id"/>
+                <field name="local_id"/>
+                <separator/>
+                <filter string="Errors" name="errors" domain="[('status', '=', 'error')]"/>
+                <filter string="Success" name="success" domain="[('status', '=', 'success')]"/>
+                <filter string="Incoming" name="incoming" domain="[('direction', '=', 'in')]"/>
+                <filter string="Outgoing" name="outgoing" domain="[('direction', '=', 'out')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="motionpark_integration_log_action" model="ir.actions.act_window">
+        <field name="name">Integration Logs</field>
+        <field name="res_model">motionpark.integration.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="motionpark_integration_log_view_search"/>
+    </record>
+</odoo>

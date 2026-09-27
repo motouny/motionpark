@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_partner_view_form_motionpark" model="ir.ui.view">
+        <field name="name">res.partner.form.motionpark</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="motionpark" string="Motion Park">
+                    <group>
+                        <field name="motionpark_external_uuid"/>
+                        <field name="mobile_normalized"/>
+                        <field name="email_normalized"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

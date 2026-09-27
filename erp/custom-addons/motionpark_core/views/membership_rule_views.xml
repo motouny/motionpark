@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="motionpark_membership_rule_view_list" model="ir.ui.view">
+        <field name="name">motionpark.membership.rule.list</field>
+        <field name="model">motionpark.membership.rule</field>
+        <field name="arch" type="xml">
+            <list string="Membership Rules">
+                <field name="name"/>
+                <field name="session_limit"/>
+                <field name="validity_days"/>
+                <field name="age_min"/>
+                <field name="age_max"/>
+                <field name="gender_scope"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="motionpark_membership_rule_view_form" model="ir.ui.view">
+        <field name="name">motionpark.membership.rule.form</field>
+        <field name="model">motionpark.membership.rule</field>
+        <field name="arch" type="xml">
+            <form string="Membership Rule">
+                <sheet>
+                    <group>
+                        <group string="General">
+                            <field name="name"/>
+                            <field name="active"/>
+                            <field name="session_limit"/>
+                            <field name="validity_days"/>
+                        </group>
+                        <group string="Restrictions">
+                            <field name="age_min"/>
+                            <field name="age_max"/>
+                            <field name="gender_scope"/>
+                        </group>
+                    </group>
+                    <group string="Scope">
+                        <field name="branch_ids" widget="many2many_tags"/>
+                        <field name="activity_ids" widget="many2many_tags"/>
+                    </group>
+                    <group string="Description">
+                        <field name="description"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="motionpark_membership_rule_view_search" model="ir.ui.view">
+        <field name="name">motionpark.membership.rule.search</field>
+        <field name="model">motionpark.membership.rule</field>
+        <field name="arch" type="xml">
+            <search string="Membership Rules">
+                <field name="name"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="motionpark_membership_rule_action" model="ir.actions.act_window">
+        <field name="name">Membership Rules</field>
+        <field name="res_model">motionpark.membership.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="motionpark_membership_rule_view_search"/>
+    </record>
+</odoo>

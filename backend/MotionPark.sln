@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{607DC648-1987-45F3-85F7-898C41A75CE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionPark.Domain", "src\MotionPark.Domain\MotionPark.Domain.csproj", "{AF57CFEC-18BA-4F31-AFB5-C6BD2603BB41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionPark.Application", "src\MotionPark.Application\MotionPark.Application.csproj", "{36B14246-DE4B-4B65-818E-7E1EE57833BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionPark.Infrastructure", "src\MotionPark.Infrastructure\MotionPark.Infrastructure.csproj", "{5B85FAEE-4F7C-4C46-87DB-ABE85452D49C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionPark.Api", "src\MotionPark.Api\MotionPark.Api.csproj", "{C0C63D01-542F-4927-AA8C-7784632C6562}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7072C746-B3B2-4E9A-AE96-0C1A3E10182F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotionPark.Tests", "tests\MotionPark.Tests\MotionPark.Tests.csproj", "{9C40F594-7ED5-4EEF-834D-2D5B5BB67770}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AF57CFEC-18BA-4F31-AFB5-C6BD2603BB41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF57CFEC-18BA-4F31-AFB5-C6BD2603BB41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF57CFEC-18BA-4F31-AFB5-C6BD2603BB41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF57CFEC-18BA-4F31-AFB5-C6BD2603BB41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36B14246-DE4B-4B65-818E-7E1EE57833BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36B14246-DE4B-4B65-818E-7E1EE57833BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36B14246-DE4B-4B65-818E-7E1EE57833BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36B14246-DE4B-4B65-818E-7E1EE57833BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B85FAEE-4F7C-4C46-87DB-ABE85452D49C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B85FAEE-4F7C-4C46-87DB-ABE85452D49C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B85FAEE-4F7C-4C46-87DB-ABE85452D49C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B85FAEE-4F7C-4C46-87DB-ABE85452D49C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0C63D01-542F-4927-AA8C-7784632C6562}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0C63D01-542F-4927-AA8C-7784632C6562}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0C63D01-542F-4927-AA8C-7784632C6562}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0C63D01-542F-4927-AA8C-7784632C6562}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C40F594-7ED5-4EEF-834D-2D5B5BB67770}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C40F594-7ED5-4EEF-834D-2D5B5BB67770}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C40F594-7ED5-4EEF-834D-2D5B5BB67770}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C40F594-7ED5-4EEF-834D-2D5B5BB67770}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AF57CFEC-18BA-4F31-AFB5-C6BD2603BB41} = {607DC648-1987-45F3-85F7-898C41A75CE1}
+		{36B14246-DE4B-4B65-818E-7E1EE57833BE} = {607DC648-1987-45F3-85F7-898C41A75CE1}
+		{5B85FAEE-4F7C-4C46-87DB-ABE85452D49C} = {607DC648-1987-45F3-85F7-898C41A75CE1}
+		{C0C63D01-542F-4927-AA8C-7784632C6562} = {607DC648-1987-45F3-85F7-898C41A75CE1}
+		{9C40F594-7ED5-4EEF-834D-2D5B5BB67770} = {7072C746-B3B2-4E9A-AE96-0C1A3E10182F}
+	EndGlobalSection
+EndGlobal

@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PLAN_FEATURES } from '../../../core/fallback-data';
 import { createLoader } from '../../../core/loader';
@@ -10,11 +10,12 @@ import { IconComponent } from '../../../shared/icon.component';
 import { LoadingComponent } from '../../../shared/loading.component';
 import { EmptyComponent } from '../../../shared/empty.component';
 import { SectionHeadComponent } from '../../../shared/section-head.component';
+import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
 
 @Component({
   selector: 'app-memberships-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DecimalPipe, IconComponent, LoadingComponent, EmptyComponent, SectionHeadComponent],
+  imports: [LeadDialogComponent, RouterLink, DecimalPipe, IconComponent, LoadingComponent, EmptyComponent, SectionHeadComponent],
   template: `
     <section id="membership" class="section memberships">
       <div class="container">
@@ -51,20 +52,24 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
                     </li>
                   }
                 </ul>
-                <a
-                  [routerLink]="['/memberships', plan.slug]"
+                <button
+                  type="button"
                   class="choose"
                   [class.gradient-button]="plan.featured"
                   [class.ghost]="!plan.featured"
+                  (click)="choose(plan)"
                 >
                   {{ i18n.t('homeMemberships.choose') }}
-                </a>
+                </button>
+                <a class="details" [routerLink]="['/memberships', plan.slug]">{{ i18n.t('homeMemberships.details') }}</a>
               </article>
             }
           </div>
         }
       </div>
     </section>
+
+    <app-lead-dialog [interest]="leadInterest()" [isOpen]="leadOpen()" (close)="leadOpen.set(false)" />
   `,
   styles: `
     .memberships { background: var(--background); }
@@ -115,6 +120,12 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
         transition: all 160ms var(--ease-out);
         &.ghost { border: 1px solid rgba(245,245,247,.18); &:hover { border-color: var(--primary); background: rgba(245,245,247,.05); } }
       }
+      .details {
+        margin-top: .75rem; text-align: center;
+        font-size: .88rem; color: var(--mp-muted);
+        transition: color 160ms var(--ease-out);
+        &:hover { color: var(--mp-white); }
+      }
     }
   `,
 })
@@ -129,7 +140,17 @@ export class MembershipsSectionComponent {
     this.loader.data().filter((p) => p.active).sort((a, b) => a.sortOrder - b.sortOrder).slice(0, 3),
   );
 
+  protected readonly leadOpen = signal(false);
+  protected readonly leadInterest = signal<string | null>(null);
+
+  protected choose(plan: MembershipPlan): void {
+    this.leadInterest.set(`${this.i18n.t('nav.memberships')}: ${this.i18n.pick(plan)}`);
+    this.leadOpen.set(true);
+  }
+
   protected featuresOf(plan: MembershipPlan): string[] {
+    const own = this.i18n.lang() === 'ar' ? plan.featuresAr : plan.featuresEn;
+    if (own?.length) return own;
     const fallback = PLAN_FEATURES[plan.slug];
     if (fallback) {
       return this.i18n.lang() === 'ar' ? fallback.featuresAr : fallback.featuresEn;

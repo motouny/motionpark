@@ -6,10 +6,10 @@ import { CmsTextPipe } from '../../../shared/cms-text.pipe';
 import { IconComponent } from '../../../shared/icon.component';
 import { LoadingComponent } from '../../../shared/loading.component';
 import { EmptyComponent } from '../../../shared/empty.component';
-import { ToastService } from '../../../shared/toast.service';
 import { createLoader } from '../../../core/loader';
 import { ScheduleEntry } from '../../../models';
 import { localDate } from '../../../core/dates';
+import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
 
 /** Day pill model for the homepage schedule preview. */
 export interface DayOption {
@@ -21,7 +21,7 @@ export interface DayOption {
 @Component({
   selector: 'app-schedule-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IconComponent, LoadingComponent, EmptyComponent],
+  imports: [LeadDialogComponent, RouterLink, IconComponent, LoadingComponent, EmptyComponent],
   template: `
     <section id="schedule" class="schedule-section">
       <div class="glow" aria-hidden="true"></div>
@@ -85,6 +85,8 @@ export interface DayOption {
         </div>
       </div>
     </section>
+
+    <app-lead-dialog [interest]="leadInterest()" [isOpen]="leadOpen()" (close)="leadOpen.set(false)" />
   `,
   styles: `
     .schedule-section { position: relative; overflow: hidden; background: var(--schedule-surface); padding: 96px 0; }
@@ -146,7 +148,6 @@ export interface DayOption {
 export class ScheduleSectionComponent {
   protected readonly i18n = inject(I18nService);
   private readonly publicService = inject(PublicService);
-  private readonly toast = inject(ToastService);
 
   @Input() content: Record<string, unknown> | null | undefined = null;
 
@@ -191,14 +192,19 @@ export class ScheduleSectionComponent {
     return this.i18n.t('homeSchedule.seatsFew', { n });
   }
 
+  protected readonly leadOpen = signal(false);
+  protected readonly leadInterest = signal<string | null>(null);
+
+  /** Visitors book through the "start today" form; members book from the full schedule page. */
   protected book(entry: ScheduleEntry): void {
-    this.toast.info(this.i18n.t('schedulePage.confirmTitle'), this.activityName(entry));
+    this.leadInterest.set(this.activityName(entry));
+    this.leadOpen.set(true);
   }
 
   private buildDays(): DayOption[] {
     const days: DayOption[] = [];
     const fmt = new Intl.DateTimeFormat(this.i18n.lang() === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long' });
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 4; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
       const label = i === 0

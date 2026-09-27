@@ -24,12 +24,10 @@ import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
     <app-lead-dialog [isOpen]="leadOpen()" (close)="leadOpen.set(false)" />
   `,
   styles: `
-    .cta-band { position: relative; overflow: hidden; background: var(--primary); padding: 64px 0; }
+    .cta-band { position: relative; overflow: hidden; background: var(--mp-gradient); padding: 72px 0; }
     .bg {
       position: absolute; inset: 0;
-      background:
-        radial-gradient(circle at 12% 40%, #FFB000 0, transparent 31%),
-        radial-gradient(circle at 88% 15%, #8A2BE2 0, transparent 39%);
+      background: radial-gradient(60% 120% at 50% 120%, rgba(18,18,24,.28), transparent 70%);
     }
     .inner {
       position: relative;

@@ -12,7 +12,7 @@ import { IconComponent } from '../shared/icon.component';
       <div class="container">
         <div class="grid">
           <div>
-            <img src="assets/brand/motion-park-logo-light.svg" alt="Motion Park" height="56" width="179" />
+            <img src="assets/brand/motion-park-logo-light.png" alt="Motion Park" height="52" width="194" loading="lazy" />
             <p class="tagline">{{ i18n.t('footer.tagline') }}</p>
           </div>
           <div>
@@ -21,8 +21,6 @@ import { IconComponent } from '../shared/icon.component';
               <a routerLink="/activities">{{ i18n.t('nav.activities') }}</a>
               <a routerLink="/schedule">{{ i18n.t('nav.schedule') }}</a>
               <a routerLink="/memberships">{{ i18n.t('nav.memberships') }}</a>
-              <a routerLink="/coaches">{{ i18n.t('nav.coaches') }}</a>
-              <a routerLink="/branches">{{ i18n.t('nav.branches') }}</a>
               <a routerLink="/about">{{ i18n.t('nav.about') }}</a>
             </nav>
           </div>

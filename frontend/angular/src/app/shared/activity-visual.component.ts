@@ -38,7 +38,7 @@ import { IconComponent } from './icon.component';
         opacity: .5;
         inset-inline-start: -60px;
         top: -60px;
-        transition: transform 500ms var(--ease-out);
+        transition: transform 240ms var(--ease-out);
       }
 
       .ring {
@@ -70,7 +70,7 @@ import { IconComponent } from './icon.component';
       position: absolute; inset: 0;
       img {
         width: 100%; height: 100%; object-fit: cover; object-position: center 40%;
-        transition: transform 700ms var(--ease-out);
+        transition: transform 240ms var(--ease-out);
       }
     }
     :host-context(a:hover) .photo img, :host-context(a:focus-visible) .photo img { transform: scale(1.05); }

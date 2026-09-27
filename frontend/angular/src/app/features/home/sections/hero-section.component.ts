@@ -22,7 +22,6 @@ interface HeroStat { value: string; outOf: string; label: string }
           sizes="100vw" width="2560" height="1440" alt="" fetchpriority="high" decoding="async" />
       </picture>
       <div class="hero-shade" aria-hidden="true"></div>
-      <div class="hero-glow" aria-hidden="true"></div>
 
       <div class="container hero-inner">
         <div class="hero-copy">
@@ -32,7 +31,7 @@ interface HeroStat { value: string; outOf: string; label: string }
           </div>
           <h1>
             {{ titleA() }}<br />
-            <span class="gradient-text">{{ titleB() }}</span>
+            <span class="accent">{{ titleB() }}</span>
           </h1>
           <p class="subtitle">{{ subtitle() }}</p>
           <div class="ctas">
@@ -89,12 +88,7 @@ interface HeroStat { value: string; outOf: string; label: string }
         linear-gradient(0deg, var(--mp-ink) 0%, rgba(18,18,24,0) 28%),
         linear-gradient(180deg, rgba(18,18,24,.65) 0%, rgba(18,18,24,0) 22%);
     }
-    .hero-glow {
-      position: absolute; z-index: -1; pointer-events: none;
-      width: 520px; height: 520px; left: -160px; bottom: -220px;
-      border-radius: 50%; filter: blur(110px); opacity: .35;
-      background: var(--mp-gradient);
-    }
+    .accent { color: var(--mp-fuchsia); }
     @keyframes hero-in {
       from { opacity: 0; transform: scale(1.06); }
       to { opacity: 1; transform: scale(1); }
@@ -165,18 +159,21 @@ interface HeroStat { value: string; outOf: string; label: string }
       .line { height: 1px; width: 6rem; background: linear-gradient(to left, #FF4081, transparent); }
     }
     /* Phones: the photo takes the top of the screen and the copy sits below it on ink. */
-    @media (max-width: 767px) {
+    /* Phones and tablets: the photo leads at the top and the copy follows on ink. */
+    @media (max-width: 1023px) {
       .hero { min-height: 0; }
-      .hero-media { bottom: auto; height: 480px; }
-      .hero-media { top: 36px; }
+      .hero-media, .hero-shade { top: 36px; bottom: auto; height: 480px; }
       .hero-media img { object-position: 76% 0%; }
       .hero-shade {
-        bottom: auto; height: 480px;
         background: linear-gradient(0deg, var(--mp-ink) 0%, rgba(18,18,24,.35) 38%, rgba(18,18,24,.1) 65%, rgba(18,18,24,.6) 100%);
       }
       .hero-inner { min-height: 0; align-items: flex-start; padding-block: 330px 4.5rem; }
       .stats { gap: 1.25rem; margin-top: 2.5rem; }
       .scroll-hint { display: none; }
+    }
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .hero-media, .hero-shade { height: 620px; }
+      .hero-inner { padding-top: 440px; justify-content: flex-start; }
     }
     @media (prefers-reduced-motion: reduce) {
       .hero-media img, .hero-copy { animation: none; }

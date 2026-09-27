@@ -15,7 +15,7 @@ interface StoryValue {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, IconComponent, SectionHeadComponent],
   template: `
-    <section id="story" class="light-surface section">
+    <section id="story" class="section story">
       <div class="container grid">
         <div class="visual">
           <div class="art">
@@ -40,7 +40,7 @@ interface StoryValue {
         </div>
 
         <div class="copy">
-          <app-section-head [eyebrow]="i18n.t('homeStory.eyebrow')" [onLight]="true">
+          <app-section-head [eyebrow]="i18n.t('homeStory.eyebrow')">
             {{ titleA() }}<br />{{ titleB() }}
             <span class="accent">{{ titleC() }}</span>
           </app-section-head>
@@ -64,14 +64,21 @@ interface StoryValue {
     </section>
   `,
   styles: `
+    .story {
+      background:
+        radial-gradient(60% 50% at 85% 40%, rgba(138,43,226,.12), transparent 70%),
+        var(--mp-ink);
+      color: var(--mp-white);
+    }
     .grid {
       display: grid; gap: 3.5rem; align-items: center;
-      @media (min-width: 1024px) { grid-template-columns: 1.05fr .95fr; }
+      @media (min-width: 1024px) { grid-template-columns: 1.15fr .85fr; }
     }
-    .visual { position: relative; max-width: 560px; margin-inline: auto; width: 100%; }
+    .visual { position: relative; max-width: 640px; margin-inline: auto; width: 100%; }
     .art {
       position: relative; aspect-ratio: 4/5; overflow: hidden;
-      border-radius: 34px;
+      border-radius: 32px;
+      border: 1px solid rgba(245,245,247,.08);
       background:
         radial-gradient(circle at 80% 20%, rgba(255,64,129,.3), transparent 45%),
         radial-gradient(circle at 20% 85%, rgba(138,43,226,.35), transparent 45%),
@@ -104,25 +111,25 @@ interface StoryValue {
       position: absolute; top: 25%; inset-inline-start: -1.75rem;
       display: grid; place-items: center;
       width: 3rem; height: 3rem; border-radius: 16px;
-      background: #1A1A1A; color: #FF7A00;
-      box-shadow: 0 20px 40px rgba(0,0,0,.2);
+      background: var(--mp-surface); color: var(--mp-orange);
+      border: 1px solid rgba(245,245,247,.1);
     }
     .tag {
       position: absolute; bottom: 3.5rem; inset-inline-end: -1.25rem;
       background: var(--primary); color: #fff;
       border-radius: 14px; padding: .7rem 1rem;
       font-size: .88rem; font-weight: 900;
-      box-shadow: 0 16px 35px rgba(255,64,129,.35);
+      box-shadow: 0 12px 28px rgba(255,64,129,.22);
     }
-    .accent { color: var(--accent); }
-    .body { margin-top: 1.5rem; max-width: 520px; font-size: 1.05rem; line-height: 1.9; color: rgba(26,26,26,.7); }
+    .accent { color: var(--mp-fuchsia); }
+    .body { margin-top: 1.5rem; max-width: 520px; font-size: 1.05rem; line-height: 1.9; color: var(--mp-muted); }
     .values {
       margin-top: 2rem;
       display: grid; gap: 1.25rem;
       @media (min-width: 640px) { grid-template-columns: 1fr 1fr; }
       li { border-inline-start: 2px solid var(--primary); padding-inline-start: 1rem; }
       h3 { font-weight: 900; }
-      p { margin-top: .35rem; font-size: .88rem; line-height: 1.7; color: rgba(26,26,26,.6); }
+      p { margin-top: .35rem; font-size: 1rem; line-height: 1.7; color: var(--mp-muted); }
     }
     .more-link {
       margin-top: 2.25rem; display: inline-flex; align-items: center; gap: .5rem;

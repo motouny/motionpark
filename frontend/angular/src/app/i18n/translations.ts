@@ -131,6 +131,7 @@ const ar: Dict = {
     perMonth: 'ر.س / شهرياً',
     choose: 'اختاري هذه العضوية',
     mostPopular: 'الأكثر اختياراً',
+    details: 'تفاصيل العضوية والاشتراك',
     fromOdoo: 'الأسعار من نظام Odoo ومُحدَّثة تلقائياً',
   },
   homeCoaches: {
@@ -166,7 +167,7 @@ const ar: Dict = {
     phone: 'رقم الجوال',
     activity: 'النشاط الذي يهمني',
     activityPlaceholder: 'النشاط الذي يهمني',
-    activities: ['اللياقة البدنية', 'السباحة', 'الأنشطة الجماعية', 'برامج الفتيات'],
+    activities: ['السباحة', 'اللياقة البدنية', 'كرة القدم النسائية', 'الأنشطة الجماعية'],
     submit: 'أرسلي طلبي',
     privacyNote: 'بياناتك تستخدم فقط للتواصل حول التجربة.',
     success: 'وصلنا طلبك',
@@ -565,6 +566,7 @@ const en: Dict = {
     perMonth: 'SAR / month',
     choose: 'Choose this plan',
     mostPopular: 'Most popular',
+    details: 'Plan details & subscribe',
     fromOdoo: 'Pricing comes from Odoo and syncs automatically',
   },
   homeCoaches: {
@@ -600,7 +602,7 @@ const en: Dict = {
     phone: 'Phone number',
     activity: 'Activity of interest',
     activityPlaceholder: 'Activity of interest',
-    activities: ['Fitness', 'Swimming', 'Group classes', 'Girls programs'],
+    activities: ['Swimming', 'Fitness', 'Women\'s football', 'Group classes'],
     submit: 'Send my request',
     privacyNote: 'Your data is only used to arrange the trial.',
     success: 'Request received',

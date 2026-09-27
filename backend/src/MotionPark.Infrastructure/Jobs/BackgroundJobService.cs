@@ -215,10 +215,11 @@ public sealed class BackgroundJobService(
 
         var odooId = await odoo.CreateCrmLeadAsync(new Dictionary<string, object?>
         {
+            ["external_reference"] = lead.Id.ToString(),
             ["name"] = $"{lead.Name} [motionpark:{lead.Id:N}]",
-            ["contact_name"] = lead.Name,
+            ["lead_type"] = "membership_interest",
             ["mobile"] = lead.Phone ?? string.Empty,
-            ["email_from"] = lead.Email ?? string.Empty,
+            ["email"] = lead.Email ?? string.Empty,
             ["description"] = lead.Message ?? string.Empty,
         }, ct) ?? throw new OdooUnavailableException("CRM lead create returned no id.");
 

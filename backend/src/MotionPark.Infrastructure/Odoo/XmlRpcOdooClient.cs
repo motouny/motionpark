@@ -109,9 +109,26 @@ public sealed class XmlRpcOdooClient : IOdooClient
 
     public async Task<string?> CreateCrmLeadAsync(Dictionary<string, object?> fields, CancellationToken ct = default)
     {
-        var created = await ExecuteKwAsync("crm.lead", "create", [fields],
-            new Dictionary<string, object?>(), ct);
-        return created?.ToString();
+        // Idempotent create via the Motion Park CRM helper (dedup on external_reference);
+        // the helper maps mobile -> crm.lead.phone (Odoo 19 has no `mobile` field).
+        var vals = new Dictionary<string, object?>();
+        foreach (var kv in fields)
+        {
+            switch (kv.Key)
+            {
+                case "external_reference": vals["external_reference"] = kv.Value; break;
+                case "name": case "contact_name": vals["name"] = kv.Value; break;
+                case "email_from": case "email": vals["email"] = kv.Value; break;
+                case "mobile": case "phone": vals["mobile"] = kv.Value; break;
+                case "description": vals["description"] = kv.Value; break;
+                case "lead_type": vals["lead_type"] = kv.Value; break;
+            }
+        }
+        var result = await ExecuteKwAsync("motionpark.lead.sync", "create_lead",
+            [vals], new Dictionary<string, object?>(), ct);
+        if (result is Dictionary<string, object?> d && d.TryGetValue("id", out var id) && id is not null)
+            return id.ToString();
+        return null;
     }
 
     private async Task<object?> ExecuteKwAsync(string model, string method, object?[] args,

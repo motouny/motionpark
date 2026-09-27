@@ -81,16 +81,8 @@ public class AdminIntegrationsController(
     [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> RetryFailed(CancellationToken ct)
     {
-        var failed = await db.OdooSyncJobs
-            .Where(j => j.Status == IntegrationStatus.Error && j.Attempts < j.MaxAttempts)
-            .ToListAsync(ct);
-        foreach (var job in failed)
-        {
-            job.Status = IntegrationStatus.Pending;
-            job.NextAttemptAt = DateTime.UtcNow;
-        }
-        await db.SaveChangesAsync(ct);
-        return Ok(new { requeued = failed.Count });
+        var requeued = await MotionPark.Application.Common.SyncJobQueue.RequeueFailedAsync(db, DateTime.UtcNow, ct);
+        return Ok(new { requeued });
     }
 
     [HttpGet("integrations/odoo/logs")]

@@ -160,6 +160,7 @@ public sealed class SyncMembershipPlansHandler(IApplicationDbContext db, IOdooCl
         };
         if (job.Id == Guid.Empty) db.OdooSyncJobs.Add(job);
         job.Status = IntegrationStatus.Processing;
+        job.UpdatedAt = DateTime.UtcNow;
         job.Attempts++;
         await db.SaveChangesAsync(ct);
 

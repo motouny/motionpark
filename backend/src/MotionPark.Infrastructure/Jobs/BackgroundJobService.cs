@@ -56,6 +56,9 @@ public sealed class BackgroundJobService(
         INotificationService notifications, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
+        var requeued = await SyncJobQueue.RequeueStuckAsync(db, now, ct);
+        if (requeued > 0) logger.LogWarning("Requeued {Count} sync jobs stuck in Processing", requeued);
+
         var jobs = await db.OdooSyncJobs
             .Where(j => (j.Status == IntegrationStatus.Pending || j.Status == IntegrationStatus.Error)
                 && j.Attempts < j.MaxAttempts
@@ -67,6 +70,7 @@ public sealed class BackgroundJobService(
         foreach (var job in jobs)
         {
             job.Status = IntegrationStatus.Processing;
+            job.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);
             try
             {

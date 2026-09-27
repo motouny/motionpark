@@ -9,7 +9,6 @@ import { EmptyComponent } from '../../../shared/empty.component';
 import { createLoader } from '../../../core/loader';
 import { ScheduleEntry } from '../../../models';
 import { localDate } from '../../../core/dates';
-import { FALLBACK_SCHEDULE } from '../../../core/fallback-data';
 import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
 
 /** Day pill model for the homepage schedule preview. */
@@ -62,7 +61,12 @@ export interface DayOption {
           } @else if (loader.error()) {
             <app-empty [message]="i18n.t('common.error')" />
           } @else if (entries().length === 0) {
-            <app-empty [message]="i18n.t('schedulePage.empty')" />
+            <div class="soon">
+              <app-icon name="calendar" size="1.6rem" />
+              <strong>{{ i18n.t('homeSchedule.soonTitle') }}</strong>
+              <p>{{ i18n.t('homeSchedule.soonText') }}</p>
+              <button class="btn gradient-button" (click)="openTrial()">{{ i18n.t('nav.bookTrial') }}</button>
+            </div>
           } @else {
             <ul class="class-list">
               @for (entry of entries(); track entry.id) {
@@ -90,6 +94,15 @@ export interface DayOption {
     <app-lead-dialog [interest]="leadInterest()" [isOpen]="leadOpen()" (close)="leadOpen.set(false)" />
   `,
   styles: `
+    .soon {
+      display: grid; justify-items: center; gap: .75rem;
+      padding: 2.5rem 1.5rem; text-align: center;
+      color: var(--mp-muted);
+      app-icon { color: var(--mp-orange); }
+      strong { font-size: 1.15rem; color: var(--mp-white); }
+      p { max-width: 360px; font-size: 1rem; }
+      .btn { margin-top: .5rem; }
+    }
     .schedule-section { position: relative; overflow: hidden; background: var(--schedule-surface); padding: 96px 0; }
     .glow {
       position: absolute; top: 4rem; inset-inline-end: -8rem;
@@ -162,11 +175,8 @@ export class ScheduleSectionComponent {
     [],
   );
 
-  /** Days with nothing published yet show the sample classes, so visitors always see what a day looks like. */
-  protected readonly entries = computed(() => {
-    const real = this.loader.data();
-    return real.length ? real : FALLBACK_SCHEDULE;
-  });
+  /** Only real classes are listed; a day with none published invites a trial request instead. */
+  protected readonly entries = computed(() => this.loader.data());
 
   constructor() {
     this.selectDay(this.days()[0]);
@@ -201,6 +211,11 @@ export class ScheduleSectionComponent {
   protected readonly leadInterest = signal<string | null>(null);
 
   /** Visitors book through the "start today" form; members book from the full schedule page. */
+  protected openTrial(): void {
+    this.leadInterest.set(null);
+    this.leadOpen.set(true);
+  }
+
   protected book(entry: ScheduleEntry): void {
     this.leadInterest.set(this.activityName(entry));
     this.leadOpen.set(true);

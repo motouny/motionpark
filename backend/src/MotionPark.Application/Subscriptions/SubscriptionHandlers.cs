@@ -22,11 +22,23 @@ public record CreateSubscriptionCommand(
 
 public record GetSubscriptionQuery(Guid UserId) : IRequest<SubscriptionDto?>;
 public record CancelSubscriptionCommand(Guid UserId, Guid SubscriptionId, string? Reason) : IRequest<SubscriptionDto>;
-public record RenewSubscriptionCommand(Guid UserId, Guid SubscriptionId) : IRequest<SubscriptionDto>;
+public record RenewSubscriptionCommand(Guid UserId, Guid SubscriptionId, string? PaymentMethodId = null) : IRequest<SubscriptionDto>;
 
 public class CreateSubscriptionValidator : AbstractValidator<CreateSubscriptionCommand>
 {
     public CreateSubscriptionValidator() => RuleFor(x => x.MembershipPlanId).NotEmpty();
+}
+
+internal static class PaymentReplayGuard
+{
+    /// <summary>A provider payment (e.g. a Moyasar payment id sent by the browser) may pay for one order only.</summary>
+    public static async Task EnsureNotReusedAsync(IApplicationDbContext db, string providerName, PaymentChargeResult charge, CancellationToken ct)
+    {
+        if (!charge.Success || string.IsNullOrEmpty(charge.ProviderReference)) return;
+        var used = await db.PaymentTransactions.AnyAsync(t => t.Provider == providerName
+            && t.ProviderReference == charge.ProviderReference && t.Status == PaymentStatus.Success, ct);
+        if (used) throw new ConflictException("PAYMENT_ALREADY_USED", "This payment has already been used.");
+    }
 }
 
 public static class SubscriptionMapper
@@ -89,6 +101,7 @@ public sealed class CreateSubscriptionHandler(
         var charge = await provider.ChargeAsync(new PaymentChargeRequest(
             plan.Price, plan.Currency, customer.Id, idempotencyKey, cmd.PaymentMethodId,
             new Dictionary<string, string> { ["planId"] = plan.Id.ToString(), ["planSlug"] = plan.Slug }), ct);
+        await PaymentReplayGuard.EnsureNotReusedAsync(db, provider.Name, charge, ct);
 
         var payment = new Payment
         {
@@ -230,10 +243,34 @@ public sealed class RenewSubscriptionHandler(
         var plan = membership.MembershipPlan;
         var idempotencyKey = Guid.NewGuid().ToString();
         var charge = await provider.ChargeAsync(new PaymentChargeRequest(
-            plan.Price, plan.Currency, customer.Id, idempotencyKey, null,
+            plan.Price, plan.Currency, customer.Id, idempotencyKey, cmd.PaymentMethodId,
             new Dictionary<string, string> { ["renew"] = membership.Id.ToString() }), ct);
+        await PaymentReplayGuard.EnsureNotReusedAsync(db, provider.Name, charge, ct);
         if (!charge.Success)
             throw new ConflictException("PAYMENT_FAILED", charge.FailureMessage ?? "Payment failed.");
+
+        var payment = new Payment
+        {
+            CustomerId = customer.Id,
+            CustomerMembershipId = membership.Id,
+            Amount = plan.Price,
+            Vat = Math.Round(plan.Price * plan.Vat / 100m, 2),
+            Currency = plan.Currency,
+            Status = PaymentStatus.Success,
+            PaymentMethod = cmd.PaymentMethodId,
+            IdempotencyKey = idempotencyKey,
+        };
+        db.Payments.Add(payment);
+        db.PaymentTransactions.Add(new PaymentTransaction
+        {
+            PaymentId = payment.Id,
+            Provider = provider.Name,
+            Amount = plan.Price,
+            Currency = plan.Currency,
+            Status = PaymentStatus.Success,
+            IdempotencyKey = idempotencyKey,
+            ProviderReference = charge.ProviderReference,
+        });
 
         var baseDate = membership.EndDate > DateTime.UtcNow ? membership.EndDate!.Value : DateTime.UtcNow;
         var durationUnit = plan.DurationUnit.Trim().ToLowerInvariant() is "year" or "years" ? plan.Duration * 12 : plan.Duration;

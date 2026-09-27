@@ -91,4 +91,31 @@ public class SubscriptionIdempotencyTests
         Assert.Empty(await db.CustomerMemberships.ToListAsync());
         Assert.Equal(PaymentStatus.Failed, (await db.Payments.SingleAsync()).Status);
     }
+
+    [Fact]
+    public async Task Provider_payment_cannot_pay_for_two_subscriptions()
+    {
+        await using var db = TestFactory.NewDbContext();
+        var (customer, userId) = await TestDataBuilder.CreateCustomerAsync(db);
+        var plan = await TestDataBuilder.CreatePlanAsync(db);
+        var provider = new FixedReferencePaymentProvider("pay_123");
+
+        await Handler(db, provider).Handle(
+            new CreateSubscriptionCommand(userId, plan.Id, null, "pay_123", "key-4"), CancellationToken.None);
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            Handler(db, provider).Handle(
+                new CreateSubscriptionCommand(userId, plan.Id, null, "pay_123", "key-5"), CancellationToken.None));
+
+        Assert.Equal("PAYMENT_ALREADY_USED", ex.Code);
+        Assert.Single(await db.CustomerMemberships.ToListAsync());
+        Assert.Single(await db.Payments.ToListAsync());
+    }
+
+    private sealed class FixedReferencePaymentProvider(string reference) : IPaymentProvider
+    {
+        public string Name => "fixed";
+        public bool IsConfigured => true;
+        public Task<PaymentChargeResult> ChargeAsync(PaymentChargeRequest request, CancellationToken ct = default)
+            => Task.FromResult(new PaymentChargeResult(true, reference, null, null, "paid"));
+    }
 }

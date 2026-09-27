@@ -37,6 +37,7 @@ public static class DependencyInjection
 
         services.AddHttpClient<IOdooClient, XmlRpcOdooClient>();
 
+        services.AddHttpClient(PaymentProviderFactory.MoyasarHttpClient, c => c.Timeout = TimeSpan.FromSeconds(30));
         services.AddSingleton<IPaymentProviderFactory, PaymentProviderFactory>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IAuditLogger, AuditLogger>();

@@ -115,4 +115,13 @@ Phone normalized `05xxxxxxxx` → `+9665xxxxxxxx`. Creates account + Odoo partne
 - GET /api/health/odoo → Odoo reachability (degraded, not fatal)
 
 ## Payments
-`IPaymentProvider` with `MockProvider` (dev only). Production without credentials → endpoints return `402 PAYMENT_CREDENTIALS_REQUIRED` (never fake success). Providers reserved: Mada, ApplePay, Visa/Mastercard.
+`IPaymentProvider` implementations: `moyasar` (production), `mock` (dev only). Production without credentials → endpoints return `402 PAYMENT_CREDENTIALS_REQUIRED` (never fake success).
+
+### Moyasar (mada, Visa/Mastercard, Apple Pay)
+Set `PAYMENT_PROVIDER=moyasar`, `PAYMENT_SECRET=sk_...`, `PAYMENT_KEY=pk_...`, `PAYMENT_CALLBACK_URL`.
+
+`paymentMethodId` on `POST /api/subscriptions` and `POST /api/subscriptions/{id}/renew` is one of:
+- **Moyasar payment id** — the browser pays with the Moyasar payment form (publishable key, `methods: ['creditcard','applepay']`, `metadata.customer_id` optional), which runs 3-D Secure for mada. The API fetches the payment with the secret key and accepts it only when it is `paid` (or `authorized`, which it captures) for the plan's exact amount and currency.
+- **`applepay:<Apple Pay payment token JSON>`** — native Apple Pay sheet; the API creates the payment server-side (`given_id` derived from the idempotency key).
+
+A payment id can pay for one order only (`409 PAYMENT_ALREADY_USED`). Failures return `409 PAYMENT_FAILED` with the reason; `PaymentTransaction.FailureCode` keeps the detailed code (`PAYMENT_AMOUNT_MISMATCH`, `PAYMENT_NOT_COMPLETED`, `PAYMENT_DECLINED`, `PAYMENT_PROVIDER_UNAVAILABLE`, ...).

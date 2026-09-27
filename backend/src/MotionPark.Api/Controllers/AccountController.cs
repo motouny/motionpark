@@ -168,13 +168,14 @@ public class MembershipsController(ISender sender) : ControllerBase
 
     [HttpPost("subscriptions/{id:guid}/renew")]
     [Authorize]
-    public async Task<IActionResult> RenewSubscription(Guid id, CancellationToken ct)
+    public async Task<IActionResult> RenewSubscription(Guid id, [FromBody] RenewSubscriptionRequest? request, CancellationToken ct)
     {
         var userId = HttpContext.User.Claims.FirstOrDefault(c => (c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)) is { } c && Guid.TryParse(c.Value, out var uid)
             ? uid : throw new UnauthorizedAppException("Invalid token.");
-        return Ok(await sender.Send(new RenewSubscriptionCommand(userId, id), ct));
+        return Ok(await sender.Send(new RenewSubscriptionCommand(userId, id, request?.PaymentMethodId), ct));
     }
 }
 
 public record CreateSubscriptionRequest(Guid MembershipPlanId, Guid? BranchId, string? PaymentMethodId, string? IdempotencyKey);
 public record CancelSubscriptionRequest(string? Reason);
+public record RenewSubscriptionRequest(string? PaymentMethodId);

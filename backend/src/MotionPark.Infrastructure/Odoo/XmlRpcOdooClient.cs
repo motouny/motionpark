@@ -102,9 +102,19 @@ public sealed class XmlRpcOdooClient : IOdooClient
     public async Task<Dictionary<string, object?>?> CreateSubscriptionAsync(
         Dictionary<string, object?> payload, CancellationToken ct = default)
     {
+        // args = [vals]: Odoo calls create_subscription(vals) and rejects anything but a dict.
         var result = await ExecuteKwAsync("motionpark.api", "create_subscription",
-            [new object?[] { payload }], new Dictionary<string, object?>(), ct);
+            [payload], new Dictionary<string, object?>(), ct);
         return result as Dictionary<string, object?>;
+    }
+
+    public async Task<string?> RegisterPaymentAsync(Dictionary<string, object?> vals, CancellationToken ct = default)
+    {
+        var result = await ExecuteKwAsync("motionpark.payment.transaction", "register_payment",
+            [vals], new Dictionary<string, object?>(), ct);
+        if (result is Dictionary<string, object?> d && d.TryGetValue("id", out var id) && id is not null)
+            return id.ToString();
+        return null;
     }
 
     public async Task<string?> CreateCrmLeadAsync(Dictionary<string, object?> fields, CancellationToken ct = default)

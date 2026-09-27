@@ -155,50 +155,18 @@ public sealed class BackgroundJobService(
         await db.SaveChangesAsync(ct);
     }
 
-    private async Task CreateSubscriptionAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo,
+    private static async Task CreateSubscriptionAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo,
         INotificationService notifications, CancellationToken ct)
     {
         var membershipId = payload.TryGetProperty("membershipId", out var m) && m.TryGetGuid(out var mg) ? mg : Guid.Empty;
         if (membershipId == Guid.Empty) return;
+        var transactionId = payload.TryGetProperty("transactionId", out var t) ? t.GetString() : null;
+
+        if (!await OdooSubscriptionSync.SyncAsync(membershipId, transactionId, db, odoo, ct)) return;
 
         var membership = await db.CustomerMemberships
             .Include(x => x.Customer).Include(x => x.MembershipPlan)
-            .FirstOrDefaultAsync(x => x.Id == membershipId, ct)
-            ?? throw new InvalidOperationException("Membership not found for subscription sync job.");
-
-        var existingMapping = await db.OdooMappings.FirstOrDefaultAsync(
-            x => x.EntityType == "CustomerMembership" && x.LocalId == membership.Id, ct);
-        if (existingMapping is not null)
-        {
-            membership.Status = SubscriptionStatus.Active;
-            await db.SaveChangesAsync(ct);
-            return;
-        }
-
-        var transactionId = payload.TryGetProperty("transactionId", out var t) ? t.GetString() : membership.Id.ToString();
-        var result = await odoo.CreateSubscriptionAsync(new Dictionary<string, object?>
-        {
-            ["customer_ref"] = membership.Customer.Id.ToString(),
-            ["partner_id"] = membership.Customer.OdooPartnerId ?? string.Empty,
-            ["plan_ref"] = membership.MembershipPlan.OdooProductId?.ToString() ?? membership.MembershipPlan.Slug,
-            ["transaction_id"] = transactionId,
-        }, ct) ?? throw new OdooUnavailableException("create_subscription returned no result.");
-
-        var odooSubId = result.TryGetValue("subscription_id", out var s) ? s?.ToString()
-            : result.TryGetValue("order_id", out var o) ? o?.ToString() : null;
-        if (string.IsNullOrWhiteSpace(odooSubId))
-            throw new OdooUnavailableException("create_subscription result carried no subscription id.");
-
-        membership.Status = SubscriptionStatus.Active;
-        membership.OdooSubscriptionId = odooSubId;
-        db.OdooMappings.Add(new OdooMapping
-        {
-            EntityType = "CustomerMembership",
-            LocalId = membership.Id,
-            OdooId = odooSubId,
-            OdooModel = "motionpark.subscription",
-        });
-        await db.SaveChangesAsync(ct);
+            .FirstAsync(x => x.Id == membershipId, ct);
         await notifications.NotifyAsync(membership.Customer.UserId, "membership.activated",
             "تم تفعيل عضويتك!", "Your membership is active!",
             membership.MembershipPlan.NameAr, membership.MembershipPlan.NameEn,

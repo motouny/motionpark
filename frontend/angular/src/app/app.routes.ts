@@ -131,7 +131,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [authGuard, roleGuard(['admin', 'manager'])],
+    canActivate: [authGuard, roleGuard(['SuperAdmin', 'ContentManager', 'Marketing', 'MembershipManager', 'ScheduleManager', 'BranchManager', 'CustomerService', 'FinanceViewer', 'admin', 'manager'])],
     loadComponent: () => import('./features/admin/admin-shell.component').then((m) => m.AdminShellComponent),
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },

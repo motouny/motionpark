@@ -11,7 +11,7 @@ namespace MotionPark.Application.Account;
 
 public record ProfileDto(
     Guid CustomerId, string Name, string? Email, string Phone, string PreferredLanguage,
-    DateTime? DateOfBirth, string? Gender);
+    DateTime? DateOfBirth, string? Gender, string[]? Roles = null);
 
 public record GetProfileQuery(Guid UserId) : IRequest<ProfileDto>;
 public record UpdateProfileCommand(Guid UserId, string? Name, string? Email, string? PreferredLanguage, DateTime? DateOfBirth, string? Gender)
@@ -30,10 +30,12 @@ public sealed class GetProfileHandler(IApplicationDbContext db)
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == query.UserId, ct)
             ?? throw new NotFoundException("USER_NOT_FOUND", "User not found.");
         var customer = await db.Customers.FirstOrDefaultAsync(c => c.UserId == query.UserId, ct);
+        var roles = await db.UserRoles.Where(ur => ur.UserId == query.UserId)
+            .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name).ToArrayAsync(ct);
         return new ProfileDto(customer?.Id ?? user.Id, customer?.Name ?? user.Name,
             string.IsNullOrEmpty(user.Email) ? customer?.Email : user.Email,
             customer?.Phone ?? user.Phone, user.PreferredLanguage,
-            customer?.DateOfBirth, customer?.Gender);
+            customer?.DateOfBirth, customer?.Gender, roles);
     }
 }
 

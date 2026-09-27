@@ -113,6 +113,11 @@ export const routes: Routes = [
         title: 'Motion Park — حجوزاتي',
       },
       {
+        path: 'payments/callback',
+        loadComponent: () => import('./features/account/payment-callback.component').then((m) => m.PaymentCallbackComponent),
+        title: 'Motion Park — تأكيد الدفع',
+      },
+      {
         path: 'payments',
         loadComponent: () => import('./features/account/payments.component').then((m) => m.PaymentsComponent),
         title: 'Motion Park — مدفوعاتي',

@@ -1,5 +1,5 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, inject, Injector, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PLAN_FEATURES } from '../../core/fallback-data';
 import { createLoader } from '../../core/loader';
@@ -9,6 +9,7 @@ import { I18nService } from '../../i18n/i18n.service';
 import { MembershipPlan, PAYMENT_CREDENTIALS_REQUIRED } from '../../models';
 import { BookingService, newIdempotencyKey } from '../../services/booking.service';
 import { MembershipService } from '../../services/membership.service';
+import { PaymentService } from '../../services/payment.service';
 import { PublicService } from '../../services/public.service';
 import { IconComponent } from '../../shared/icon.component';
 import { LoadingComponent } from '../../shared/loading.component';
@@ -73,13 +74,21 @@ import { ErrorStateComponent } from '../../shared/error-state.component';
               </div>
             }
 
-            <button class="btn gradient-button btn-block" [disabled]="subscribing()" (click)="subscribe(plan()!)">
-              @if (subscribing()) {
-                {{ i18n.t('common.submitting') }}
-              } @else {
-                {{ i18n.t('membershipsPage.subscribe') }}
-              }
-            </button>
+            @if (showPaymentForm()) {
+              <div class="payment-form">
+                <h3>{{ i18n.t('membershipsPage.payTitle') }}</h3>
+                <p class="secure"><app-icon name="check" size="0.8rem" /> {{ i18n.t('membershipsPage.paySecure') }}</p>
+                <div id="moyasar-form" class="mysr-form"></div>
+              </div>
+            } @else {
+              <button class="btn gradient-button btn-block" [disabled]="subscribing()" (click)="subscribe(plan()!)">
+                @if (subscribing()) {
+                  {{ i18n.t('common.submitting') }}
+                } @else {
+                  {{ i18n.t('membershipsPage.subscribe') }}
+                }
+              </button>
+            }
           </div>
 
           <div class="card side">
@@ -151,6 +160,11 @@ import { ErrorStateComponent } from '../../shared/error-state.component';
       strong { display: block; color: #fff; margin-bottom: .2rem; }
       p { color: rgba(245,245,247,.6); font-size: .8rem; line-height: 1.7; }
     }
+    .payment-form {
+      h3 { margin-bottom: .35rem; }
+      .secure { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--muted-foreground); margin-bottom: 1rem; }
+      .mysr-form { background: #fff; border-radius: 16px; padding: 1rem; color: #111; }
+    }
     .side .muted { color: var(--muted-foreground); font-size: .88rem; margin-bottom: 1.25rem; }
     .ref-list { display: grid; gap: .6rem; margin-bottom: 1.5rem; }
     .ref-list li { display: flex; align-items: center; gap: .55rem; color: rgba(245,245,247,.75); font-size: .9rem; }
@@ -165,9 +179,12 @@ export class MembershipDetailComponent {
   private readonly store = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly payments = inject(PaymentService);
+  private readonly injector = inject(Injector);
 
   protected readonly subscribing = signal(false);
   protected readonly paymentPending = signal(false);
+  protected readonly showPaymentForm = signal(false);
 
   private readonly slug = signal(this.route.snapshot.paramMap.get('slug') ?? '');
   protected readonly loader = createLoader(() => this.publicService.membershipPlans(), []);
@@ -198,21 +215,45 @@ export class MembershipDetailComponent {
     }
     this.subscribing.set(true);
     this.paymentPending.set(false);
+    this.payments.checkout(plan.id).subscribe({
+      next: (checkout) => {
+        if (checkout.provider !== 'moyasar') {
+          this.createSubscription(plan);
+          return;
+        }
+        this.payments.savePending({ planId: plan.id, planSlug: plan.slug, idempotencyKey: checkout.idempotencyKey });
+        this.subscribing.set(false);
+        this.showPaymentForm.set(true);
+        afterNextRender(() => {
+          this.payments.mountMoyasarForm('#moyasar-form', checkout, this.i18n.lang() === 'ar' ? 'ar' : 'en').catch(() => {
+            this.showPaymentForm.set(false);
+            this.toast.error(this.i18n.t('common.error'));
+          });
+        }, { injector: this.injector });
+      },
+      error: (err: unknown) => this.handleError(err),
+    });
+  }
+
+  /** Providers without a browser form (dev mock) charge directly. */
+  private createSubscription(plan: MembershipPlan): void {
     this.membershipService.subscribe(plan.id, undefined, undefined, newIdempotencyKey()).subscribe({
       next: () => {
         this.subscribing.set(false);
         this.toast.success(this.i18n.t('common.saved'), this.i18n.pick(plan));
         this.router.navigate(['/account/membership']).catch(() => undefined);
       },
-      error: (err: unknown) => {
-        this.subscribing.set(false);
-        const apiError = normalizeHttpError(err);
-        if (apiError.status === 402 && apiError.code === PAYMENT_CREDENTIALS_REQUIRED) {
-          this.paymentPending.set(true);
-        } else {
-          this.toast.error(apiError.message || this.i18n.t('common.error'));
-        }
-      },
+      error: (err: unknown) => this.handleError(err),
     });
+  }
+
+  private handleError(err: unknown): void {
+    this.subscribing.set(false);
+    const apiError = normalizeHttpError(err);
+    if (apiError.status === 402 && apiError.code === PAYMENT_CREDENTIALS_REQUIRED) {
+      this.paymentPending.set(true);
+    } else {
+      this.toast.error(apiError.message || this.i18n.t('common.error'));
+    }
   }
 }

@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MotionPark.Application.Abstractions;
+using MotionPark.Application.Common;
 
 namespace MotionPark.Infrastructure.Payments;
 
@@ -221,20 +222,7 @@ public sealed class MoyasarPaymentProvider(HttpClient http, MoyasarOptions optio
     }
 
     /// <summary>Moyasar amounts are integers in the currency's smallest unit (SAR → halalas).</summary>
-    public static long ToMinorUnits(decimal amount, string currency)
-    {
-        if (amount <= 0) throw new ArgumentException("Amount must be positive.");
-        var exponent = currency.ToUpperInvariant() switch
-        {
-            "KWD" or "BHD" or "OMR" or "JOD" or "TND" or "IQD" or "LYD" => 3,
-            "JPY" or "KRW" => 0,
-            _ => 2,
-        };
-        var scaled = amount * (decimal)Math.Pow(10, exponent);
-        if (scaled != decimal.Truncate(scaled))
-            throw new ArgumentException($"Amount {amount} has more precision than {currency} allows.");
-        return (long)scaled;
-    }
+    public static long ToMinorUnits(decimal amount, string currency) => Money.ToMinorUnits(amount, currency);
 
     private sealed class MoyasarPayment
     {

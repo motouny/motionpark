@@ -44,4 +44,12 @@ public sealed class PaymentProviderFactory(
             _ => new NotConfiguredPaymentProvider(),
         };
     }
+
+    public PaymentClientConfig GetClientConfig()
+    {
+        var provider = GetProvider();
+        if (provider is not MoyasarPaymentProvider) return new PaymentClientConfig(provider.Name, null, null);
+        var options = MoyasarOptions.FromConfiguration(config);
+        return new PaymentClientConfig(provider.Name, options.PublishableKey, options.CallbackUrl);
+    }
 }

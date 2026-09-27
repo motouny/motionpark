@@ -22,7 +22,11 @@ public interface IPaymentProvider
     Task<PaymentChargeResult> ChargeAsync(PaymentChargeRequest request, CancellationToken ct = default);
 }
 
+/// <summary>Non-secret settings the browser needs to render the provider's payment form.</summary>
+public sealed record PaymentClientConfig(string Provider, string? PublishableKey, string? CallbackUrl);
+
 public interface IPaymentProviderFactory
 {
     IPaymentProvider GetProvider();
+    PaymentClientConfig GetClientConfig() => new(GetProvider().Name, null, null);
 }

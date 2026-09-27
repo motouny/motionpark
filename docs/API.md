@@ -124,4 +124,10 @@ Set `PAYMENT_PROVIDER=moyasar`, `PAYMENT_SECRET=sk_...`, `PAYMENT_KEY=pk_...`, `
 - **Moyasar payment id** — the browser pays with the Moyasar payment form (publishable key, `methods: ['creditcard','applepay']`, `metadata.customer_id` optional), which runs 3-D Secure for mada. The API fetches the payment with the secret key and accepts it only when it is `paid` (or `authorized`, which it captures) for the plan's exact amount and currency.
 - **`applepay:<Apple Pay payment token JSON>`** — native Apple Pay sheet; the API creates the payment server-side (`given_id` derived from the idempotency key).
 
+### POST /api/payments/checkout `{ membershipPlanId }` (auth)
+→ `{ provider, publishableKey, amount (halalas), currency, description, callbackUrl, idempotencyKey, metadata }` for the Moyasar form; `402` when payments are off. The Angular plan page renders the form with it, and Moyasar returns the customer to `/account/payments/callback?id=…&status=…`, which calls `POST /api/subscriptions` with the payment id and the same idempotency key.
+
+### POST /api/payments/moyasar/webhook (Moyasar → API)
+Register it in the Moyasar dashboard for `payment_paid` with secret `PAYMENT_WEBHOOK_SECRET`. It completes the subscription from the payment's metadata when the customer paid but never came back; it is a no-op when the callback already did. Returns `404` while `PAYMENT_WEBHOOK_SECRET` is unset, `401` on a wrong secret.
+
 A payment id can pay for one order only (`409 PAYMENT_ALREADY_USED`). Failures return `409 PAYMENT_FAILED` with the reason; `PaymentTransaction.FailureCode` keeps the detailed code (`PAYMENT_AMOUNT_MISMATCH`, `PAYMENT_NOT_COMPLETED`, `PAYMENT_DECLINED`, `PAYMENT_PROVIDER_UNAVAILABLE`, ...).

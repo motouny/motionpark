@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_motionpark_membership_products" name="Membership Products" parent="motionpark_core.menu_motionpark_root" action="action_motionpark_membership_products" sequence="20"/>
+</odoo>

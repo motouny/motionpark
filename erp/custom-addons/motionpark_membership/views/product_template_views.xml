@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_motionpark" model="ir.ui.view">
+        <field name="name">product.template.form.motionpark</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="motionpark_membership" string="Motion Park Membership">
+                    <group>
+                        <group string="Membership">
+                            <field name="is_motionpark_membership"/>
+                            <field name="motionpark_name_ar"/>
+                            <field name="membership_duration"/>
+                            <field name="duration_unit"/>
+                            <field name="session_limit"/>
+                            <field name="motionpark_list_price_with_vat"/>
+                        </group>
+                        <group string="Restrictions &amp; Web">
+                            <field name="age_min"/>
+                            <field name="age_max"/>
+                            <field name="gender_scope"/>
+                            <field name="online_available"/>
+                            <field name="website_featured"/>
+                            <field name="website_sort_order"/>
+                        </group>
+                    </group>
+                    <group string="Descriptions">
+                        <field name="motionpark_description_en"/>
+                        <field name="motionpark_description_ar"/>
+                    </group>
+                    <group string="Scope">
+                        <field name="branch_ids" widget="many2many_tags"/>
+                        <field name="motionpark_activity_ids" widget="many2many_tags"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_template_search_view_motionpark" model="ir.ui.view">
+        <field name="name">product.template.search.motionpark</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='filter_to_sell']" position="after">
+                <filter string="Motion Park Memberships" name="motionpark_membership" domain="[('is_motionpark_membership', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_motionpark_membership_products" model="ir.actions.act_window">
+        <field name="name">Membership Products</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_motionpark_membership', '=', True)]</field>
+        <field name="context">{'default_is_motionpark_membership': True, 'search_default_motionpark_membership': 1}</field>
+    </record>
+</odoo>

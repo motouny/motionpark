@@ -43,7 +43,7 @@ function planKey(nameEn: string | undefined): string {
                 @if (plan.featured) {
                   <span class="flag">{{ i18n.t('homeMemberships.mostPopular') }}</span>
                 }
-                <p class="desc">{{ i18n.pick(plan, 'descriptionAr', 'descriptionEn') }}</p>
+                @if (descOf(plan); as d) { <p class="desc">{{ d }}</p> }
                 <h3>{{ i18n.pick(plan) }}</h3>
                 <div class="price">
                   <strong>{{ plan.price | number: '1.0-0' }}</strong>
@@ -151,6 +151,12 @@ export class MembershipsSectionComponent {
   protected choose(plan: MembershipPlan): void {
     this.leadInterest.set(`${this.i18n.t('nav.memberships')}: ${this.i18n.pick(plan)}`);
     this.leadOpen.set(true);
+  }
+
+  /** The short line above the plan name; hidden in Arabic when Odoo only has English text for it. */
+  protected descOf(plan: MembershipPlan): string {
+    const d = this.i18n.pick(plan, 'descriptionAr', 'descriptionEn');
+    return this.i18n.lang() === 'ar' && d && !/[\u0600-\u06FF]/.test(d) ? '' : d;
   }
 
   protected featuresOf(plan: MembershipPlan): string[] {

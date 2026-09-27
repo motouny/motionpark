@@ -97,7 +97,11 @@ public class Program
         builder.Services.AddMotionParkInfrastructure(builder.Configuration);
 
         builder.Services.AddControllers()
-            .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
+            .AddJsonOptions(o =>
+            {
+                o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                o.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+            });
         builder.Services.AddEndpointsApiExplorer();
 
         var enableSwagger = string.Equals(builder.Configuration["ENABLE_SWAGGER"], "true", StringComparison.OrdinalIgnoreCase);

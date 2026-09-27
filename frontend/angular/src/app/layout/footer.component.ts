@@ -38,8 +38,8 @@ import { IconComponent } from '../shared/icon.component';
         <div class="bottom">
           <span>{{ i18n.t('footer.rights') }}</span>
           <nav class="legal" [attr.aria-label]="i18n.t('footer.legal')">
-            <a routerLink="/privacy">{{ i18n.t('footer.legal') }}</a>
-            <a routerLink="/terms">{{ i18n.t('footer.legal') }}</a>
+            <a routerLink="/privacy">{{ i18n.t('footer.privacy') }}</a>
+            <a routerLink="/terms">{{ i18n.t('footer.terms') }}</a>
           </nav>
           <span class="motto">{{ i18n.t('footer.motto') }}</span>
         </div>

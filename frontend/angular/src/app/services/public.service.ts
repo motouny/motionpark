@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { catchError, map, Observable, of, tap } from 'rxjs';
 import { API_CONFIG, ApiConfig } from '../core/api-config';
 import {
   FALLBACK_ACTIVITIES, FALLBACK_BRANCHES, FALLBACK_COACHES, FALLBACK_FAQS,
@@ -111,11 +111,13 @@ export class PublicService {
   }
 
   homepage(): Observable<HomepageSection[]> {
-    return this.http.get<HomepageSection[]>(`${this.base}/homepage`).pipe(
+    return this.http.get<HomepageResponse | ApiHomepageSection[]>(`${this.base}/homepage`).pipe(
+      map((res) => toHomepageSections(res)),
       tap((sections) => {
         const enabled = sections.filter((s) => s.enabled);
         if (!enabled.length) this.degraded.set(true);
       }),
+      map((sections) => (sections.some((s) => s.enabled) ? sections : FALLBACK_HOMEPAGE_SECTIONS)),
       catchError(this.degrade(FALLBACK_HOMEPAGE_SECTIONS)),
     );
   }
@@ -123,4 +125,34 @@ export class PublicService {
   leads(payload: LeadPayload): Observable<unknown> {
     return this.http.post(`${this.base}/leads`, payload);
   }
+}
+
+/** `/api/public/homepage` returns `{ sections: [{ id, key, titleAr, titleEn, content, sortOrder }], brand, settings }`. */
+interface ApiHomepageSection {
+  id?: string;
+  key?: string;
+  type?: string;
+  titleAr?: string;
+  titleEn?: string;
+  enabled?: boolean;
+  sortOrder?: number;
+  content?: Record<string, unknown> | null;
+}
+
+interface HomepageResponse {
+  sections?: ApiHomepageSection[];
+}
+
+/** The API only returns enabled, published sections, keyed by `key`. */
+function toHomepageSections(res: HomepageResponse | ApiHomepageSection[] | null): HomepageSection[] {
+  const raw = Array.isArray(res) ? res : res?.sections ?? [];
+  return raw
+    .map((s, i) => ({
+      id: s.id,
+      type: s.key ?? s.type ?? '',
+      enabled: s.enabled ?? true,
+      sortOrder: s.sortOrder ?? i,
+      content: s.content ?? null,
+    }))
+    .filter((s) => s.type);
 }

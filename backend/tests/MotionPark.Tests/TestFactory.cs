@@ -82,6 +82,13 @@ public sealed class FakeOdooClient : IOdooClient
         PartnerCreateCount++;
         return Task.FromResult<string?>($"100{PartnerCreateCount}");
     }
+    public List<(string PartnerId, Dictionary<string, object?> Fields)> PartnerUpdates { get; } = [];
+    public Task UpdatePartnerAsync(string partnerId, Dictionary<string, object?> fields, CancellationToken ct = default)
+    {
+        if (!Reachable) throw new OdooUnavailableException("Odoo down");
+        PartnerUpdates.Add((partnerId, fields));
+        return Task.CompletedTask;
+    }
     public List<Dictionary<string, object?>> SubscriptionPayloads { get; } = [];
     public List<Dictionary<string, object?>> PaymentPayloads { get; } = [];
     public bool FailPaymentRegistration { get; set; }

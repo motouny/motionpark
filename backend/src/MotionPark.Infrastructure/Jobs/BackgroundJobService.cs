@@ -128,35 +128,12 @@ public sealed class BackgroundJobService(
         }
     }
 
-    private async Task SyncPartnerAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo, CancellationToken ct)
+    private static async Task SyncPartnerAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo, CancellationToken ct)
     {
         var customerId = payload.TryGetProperty("customerId", out var c) && c.TryGetGuid(out var cg) ? cg : Guid.Empty;
         if (customerId == Guid.Empty) return;
-
-        var existingMapping = await db.OdooMappings.FirstOrDefaultAsync(
-            m => m.EntityType == "Customer" && m.LocalId == customerId, ct);
-        if (existingMapping is not null) return;
-
-        var customer = await db.Customers.FirstAsync(c => c.Id == customerId, ct);
-        var odooId = await odoo.CreatePartnerAsync(new Dictionary<string, object?>
-        {
-            ["name"] = customer.Name,
-            ["mobile"] = customer.Phone,
-            ["email"] = customer.Email ?? string.Empty,
-            ["ref"] = customer.Id.ToString(), // idempotency key on the Odoo side
-        }, ct);
-        if (string.IsNullOrWhiteSpace(odooId))
-            throw new OdooUnavailableException("Partner create returned no id.");
-
-        customer.OdooPartnerId = odooId;
-        db.OdooMappings.Add(new OdooMapping
-        {
-            EntityType = "Customer",
-            LocalId = customer.Id,
-            OdooId = odooId,
-            OdooModel = "res.partner",
-        });
-        await db.SaveChangesAsync(ct);
+        var update = payload.TryGetProperty("update", out var u) && u.ValueKind == JsonValueKind.True;
+        await OdooPartnerSync.SyncAsync(customerId, update, db, odoo, ct);
     }
 
     private static async Task CreateSubscriptionAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo,

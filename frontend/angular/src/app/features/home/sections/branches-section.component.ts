@@ -8,11 +8,12 @@ import { EmptyComponent } from '../../../shared/empty.component';
 import { IconComponent } from '../../../shared/icon.component';
 import { LoadingComponent } from '../../../shared/loading.component';
 import { SectionHeadComponent } from '../../../shared/section-head.component';
+import { HoursPipe } from '../../../shared/hours.pipe';
 
 @Component({
   selector: 'app-branches-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IconComponent, LoadingComponent, EmptyComponent, SectionHeadComponent],
+  imports: [HoursPipe, RouterLink, IconComponent, LoadingComponent, EmptyComponent, SectionHeadComponent],
   template: `
     <section class="light-surface section branches">
       <div class="container">
@@ -35,7 +36,7 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
                 <span class="pin"><app-icon name="map-pin" size="1.3rem" /></span>
                 <h3>{{ i18n.pick(b) }}</h3>
                 <p class="addr">{{ b.address }}</p>
-                <p class="hours">{{ b.operatingHours }}</p>
+                <p class="hours">{{ b.operatingHours | hours:i18n.lang() }}</p>
               </a>
             }
           </div>

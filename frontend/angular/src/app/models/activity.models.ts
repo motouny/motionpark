@@ -37,7 +37,7 @@ export interface Branch {
   longitude?: number | null;
   phone?: string;
   whatsapp?: string;
-  operatingHours?: string;
+  operatingHours?: OperatingHours | null;
   active: boolean;
 }
 
@@ -68,3 +68,6 @@ export interface ScheduleEntry {
   coachNameAr?: string;
   coachNameEn?: string;
 }
+
+/** `{ ar, en }` from the public API; a JSON string from admin endpoints; plain text in fallback data. */
+export type OperatingHours = string | { ar?: string; en?: string };

@@ -53,10 +53,20 @@ export interface Booking {
   activity?: LookupRef | null;
   branch?: LookupRef | null;
   coach?: LookupRef | null;
+  /** admin list only */
+  customerName?: string;
+  customerPhone?: string;
+  allowedStatuses?: string[];
 }
 
 export interface ScheduleSummary {
   id: string;
+  activityNameAr?: string;
+  activityNameEn?: string;
+  branchNameAr?: string;
+  branchNameEn?: string;
+  coachNameAr?: string;
+  coachNameEn?: string;
   date?: string;
   startTime?: string;
   endTime?: string;

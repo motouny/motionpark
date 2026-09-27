@@ -9,6 +9,7 @@ import { EmptyComponent } from '../../../shared/empty.component';
 import { ToastService } from '../../../shared/toast.service';
 import { createLoader } from '../../../core/loader';
 import { ScheduleEntry } from '../../../models';
+import { localDate } from '../../../core/dates';
 
 /** Day pill model for the homepage schedule preview. */
 export interface DayOption {
@@ -205,7 +206,7 @@ export class ScheduleSectionComponent {
         : i === 1
           ? this.i18n.lang() === 'ar' ? 'غداً' : 'Tomorrow'
           : fmt.format(d);
-      days.push({ key: d.toISOString(), date: d.toISOString().slice(0, 10), label });
+      days.push({ key: d.toISOString(), date: localDate(d), label });
     }
     return days;
   }

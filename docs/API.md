@@ -92,7 +92,7 @@ Phone normalized `05xxxxxxxx` → `+9665xxxxxxxx`. Creates account + Odoo partne
 - GET /api/admin/media?search=&category=
 - POST /api/admin/media (multipart, multiple) → stored in `/var/www/motionpark/storage/media` (NOT git)
 - PUT /api/admin/media/{id} (altAr, altEn, title, category), DELETE /api/admin/media/{id}
-- GET /api/media/{id}/file → authorized file serving
+- GET /api/media/{id}/file → public file serving (media library content shown on the site; SVGs are sandboxed by CSP)
 ### Membership display: GET/PUT /api/admin/membership-plans (display/sort/featured overrides; price stays Odoo-owned)
 ### Customers: GET /api/admin/customers, GET/PUT /api/admin/customers/{id}
 ### Leads: GET /api/admin/leads, PUT /api/admin/leads/{id} (status)

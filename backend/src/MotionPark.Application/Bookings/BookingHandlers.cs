@@ -201,57 +201,8 @@ public sealed class CancelBookingHandler(
 
         if (booking.Status == BookingStatus.Cancelled)
             return BookingMapper.ToDto(booking); // idempotent
-        if (booking.Status == BookingStatus.CheckedIn)
-            throw new ConflictException("ALREADY_CHECKED_IN", "A checked-in booking cannot be cancelled.");
 
-        var handle = await locks.TryAcquireAsync($"booking:{booking.ScheduleId}", TimeSpan.FromSeconds(20), ct)
-            ?? throw new ConflictException("BOOKING_BUSY", "Please retry the cancellation.");
-        await using (handle)
-        {
-            booking.Status = BookingStatus.Cancelled;
-            booking.CancelledAt = DateTime.UtcNow;
-            booking.CancelReason = cmd.Reason;
-
-            var schedule = booking.Schedule;
-            schedule.BookedCount = Math.Max(0, schedule.BookedCount - 1);
-
-            // Restore a session when the membership has a session cap.
-            var membership = await db.CustomerMemberships
-                .Include(m => m.MembershipPlan)
-                .FirstOrDefaultAsync(m => m.CustomerId == customer.Id
-                    && m.Status == SubscriptionStatus.Active, ct);
-            if (membership?.RemainingSessions is { } remaining && membership.MembershipPlan.SessionLimit > 0
-                && remaining < membership.MembershipPlan.SessionLimit)
-                membership.RemainingSessions = remaining + 1;
-
-            // Promote the first waitlisted customer into the freed seat.
-            var entry = await db.WaitingListEntries
-                .Where(w => w.ScheduleId == schedule.Id && w.Status == WaitingListEntryStatus.Active)
-                .OrderBy(w => w.Position)
-                .FirstOrDefaultAsync(ct);
-            if (entry is not null)
-            {
-                entry.Status = WaitingListEntryStatus.Promoted;
-                schedule.WaitingListCount = Math.Max(0, schedule.WaitingListCount - 1);
-                var promoted = new Booking
-                {
-                    CustomerId = entry.CustomerId,
-                    ScheduleId = schedule.Id,
-                    Status = BookingStatus.Reserved,
-                };
-                db.Bookings.Add(promoted);
-                schedule.BookedCount++; // seat moves to the promoted customer
-                var promotedCustomerUserId = await db.Customers
-                    .Where(c => c.Id == entry.CustomerId)
-                    .Select(c => (Guid?)c.UserId).FirstOrDefaultAsync(ct);
-                await notifications.NotifyAsync(promotedCustomerUserId, "waitlist.promoted",
-                    "تم ترقية حجزك", "You have been promoted from the waiting list",
-                    schedule.Activity?.NameAr, schedule.Activity?.NameEn,
-                    Domain.NotificationChannel.InApp, new { scheduleId = schedule.Id }, ct);
-            }
-
-            await db.SaveChangesAsync(ct);
-        }
+        await BookingCancellation.CancelAsync(db, locks, notifications, booking, cmd.Reason, ct);
 
         await notifications.NotifyAsync(customer.UserId, "booking.cancelled",
             "تم إلغاء الحجز", "Booking cancelled",
@@ -288,5 +239,78 @@ public sealed class GetMyBookingsHandler(IApplicationDbContext db)
         return list.Select(b => BookingMapper.ToDto(b,
             b.Status == BookingStatus.WaitingList && waitPositions.TryGetValue(b.ScheduleId, out var p) ? p : null
         )).ToList();
+    }
+}
+
+/// <summary>
+/// Cancels a booking under the schedule lock. A booked seat is freed (with its session restored and the
+/// first waitlisted customer promoted into it); a waiting-list booking only leaves the waiting list.
+/// </summary>
+internal static class BookingCancellation
+{
+    public static async Task CancelAsync(IApplicationDbContext db, ILockProvider locks, INotificationService notifications,
+        Booking booking, string? reason, CancellationToken ct)
+    {
+        if (booking.Status == BookingStatus.CheckedIn)
+            throw new ConflictException("ALREADY_CHECKED_IN", "A checked-in booking cannot be cancelled.");
+
+        var handle = await locks.TryAcquireAsync($"booking:{booking.ScheduleId}", TimeSpan.FromSeconds(20), ct)
+            ?? throw new ConflictException("BOOKING_BUSY", "Please retry the cancellation.");
+        await using (handle)
+        {
+            var wasWaiting = booking.Status == BookingStatus.WaitingList;
+            booking.Status = BookingStatus.Cancelled;
+            booking.CancelledAt = DateTime.UtcNow;
+            booking.CancelReason = reason;
+            var schedule = booking.Schedule;
+
+            if (wasWaiting)
+            {
+                var own = await db.WaitingListEntries.FirstOrDefaultAsync(w => w.ScheduleId == schedule.Id
+                    && w.CustomerId == booking.CustomerId && w.Status == WaitingListEntryStatus.Active, ct);
+                if (own is not null) own.Status = WaitingListEntryStatus.Cancelled;
+                schedule.WaitingListCount = Math.Max(0, schedule.WaitingListCount - 1);
+                await db.SaveChangesAsync(ct);
+                return;
+            }
+
+            schedule.BookedCount = Math.Max(0, schedule.BookedCount - 1);
+
+            // Restore a session when the membership has a session cap.
+            var membership = await db.CustomerMemberships
+                .Include(m => m.MembershipPlan)
+                .FirstOrDefaultAsync(m => m.CustomerId == booking.CustomerId
+                    && m.Status == SubscriptionStatus.Active, ct);
+            if (membership?.RemainingSessions is { } remaining && membership.MembershipPlan.SessionLimit > 0
+                && remaining < membership.MembershipPlan.SessionLimit)
+                membership.RemainingSessions = remaining + 1;
+
+            // Promote the first waitlisted customer into the freed seat: their waiting-list booking becomes the seat.
+            var entry = await db.WaitingListEntries
+                .Where(w => w.ScheduleId == schedule.Id && w.Status == WaitingListEntryStatus.Active)
+                .OrderBy(w => w.Position)
+                .FirstOrDefaultAsync(ct);
+            if (entry is not null)
+            {
+                entry.Status = WaitingListEntryStatus.Promoted;
+                schedule.WaitingListCount = Math.Max(0, schedule.WaitingListCount - 1);
+                var waiting = await db.Bookings.FirstOrDefaultAsync(b => b.ScheduleId == schedule.Id
+                    && b.CustomerId == entry.CustomerId && b.Status == BookingStatus.WaitingList, ct);
+                if (waiting is not null)
+                    waiting.Status = BookingStatus.Reserved;
+                else
+                    db.Bookings.Add(new Booking { CustomerId = entry.CustomerId, ScheduleId = schedule.Id, Status = BookingStatus.Reserved });
+                schedule.BookedCount++; // seat moves to the promoted customer
+                var promotedCustomerUserId = await db.Customers
+                    .Where(c => c.Id == entry.CustomerId)
+                    .Select(c => (Guid?)c.UserId).FirstOrDefaultAsync(ct);
+                await notifications.NotifyAsync(promotedCustomerUserId, "waitlist.promoted",
+                    "تم ترقية حجزك", "You have been promoted from the waiting list",
+                    schedule.Activity?.NameAr, schedule.Activity?.NameEn,
+                    Domain.NotificationChannel.InApp, new { scheduleId = schedule.Id }, ct);
+            }
+
+            await db.SaveChangesAsync(ct);
+        }
     }
 }

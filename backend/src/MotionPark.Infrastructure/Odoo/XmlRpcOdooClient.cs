@@ -99,6 +99,17 @@ public sealed class XmlRpcOdooClient : IOdooClient
         return null;
     }
 
+    public async Task UpdatePartnerAsync(string partnerId, Dictionary<string, object?> fields, CancellationToken ct = default)
+    {
+        if (!int.TryParse(partnerId, out var id))
+            throw new InvalidOperationException($"Odoo partner id '{partnerId}' is not numeric.");
+        // res.partner.write(ids, vals); Odoo 19 has no `mobile` field, so mobile goes to `phone`.
+        var vals = new Dictionary<string, object?>();
+        foreach (var (key, value) in fields)
+            vals[key == "mobile" ? "phone" : key] = value;
+        await ExecuteKwAsync("res.partner", "write", [new object?[] { id }, vals], new Dictionary<string, object?>(), ct);
+    }
+
     public async Task<Dictionary<string, object?>?> CreateSubscriptionAsync(
         Dictionary<string, object?> payload, CancellationToken ct = default)
     {

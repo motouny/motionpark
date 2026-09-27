@@ -141,6 +141,37 @@ public class OdooSubscriptionSyncTests
         Assert.Equal(2, bodies.Count(b => b.Contains("execute_kw")));
     }
 
+    [Fact]
+    public async Task Partner_update_calls_res_partner_write_with_ids_then_vals()
+    {
+        string? writeBody = null;
+        var handler = new XmlHandler(async req =>
+        {
+            var body = await req.Content!.ReadAsStringAsync();
+            if (body.Contains("execute_kw")) writeBody = body;
+            return body.Contains("<methodName>login</methodName>")
+                ? "<methodResponse><params><param><value><int>2</int></value></param></params></methodResponse>"
+                : "<methodResponse><params><param><value><boolean>1</boolean></value></param></params></methodResponse>";
+        });
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ODOO_URL"] = "http://odoo.test", ["ODOO_PASSWORD"] = "x",
+        }).Build();
+        var client = new XmlRpcOdooClient(new HttpClient(handler), config, NullLogger<XmlRpcOdooClient>.Instance);
+
+        await client.UpdatePartnerAsync("15", new Dictionary<string, object?> { ["name"] = "N", ["mobile"] = "+9665" });
+
+        var p = XDocument.Parse(writeBody!).Descendants("param").ToList();
+        Assert.Equal("res.partner", p[3].Value);
+        Assert.Equal("write", p[4].Value);
+        // args = [ [15], {name, phone} ]
+        var args = p[5].Element("value")!.Element("array")!.Element("data")!.Elements("value").ToList();
+        Assert.Equal("15", args[0].Descendants("int").Single().Value);
+        var names = args[1].Descendants("name").Select(n => n.Value).ToList();
+        Assert.Contains("phone", names);
+        Assert.DoesNotContain("mobile", names);
+    }
+
     private sealed class XmlHandler(Func<HttpRequestMessage, Task<string>> respond) : HttpMessageHandler
     {
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)

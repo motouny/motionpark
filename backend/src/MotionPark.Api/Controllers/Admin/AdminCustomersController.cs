@@ -58,6 +58,7 @@ public class AdminCustomersController(IApplicationDbContext db, IAuditLogger aud
         var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id, ct);
         if (customer is null) return NotFound(new { error = new { code = "NOT_FOUND", message = "Customer not found." } });
 
+        var partnerBefore = (customer.Name, customer.Email, customer.Phone);
         if (req.Name is not null) customer.Name = req.Name;
         if (req.Email is not null) customer.Email = req.Email;
         if (req.DateOfBirth.HasValue) customer.DateOfBirth = req.DateOfBirth;
@@ -72,6 +73,8 @@ public class AdminCustomersController(IApplicationDbContext db, IAuditLogger aud
                 if (user is not null) user.Phone = phone;
             }
         }
+        if ((customer.Name, customer.Email, customer.Phone) != partnerBefore)
+            await SyncJobQueue.EnqueuePartnerUpdateAsync(db, customer.Id, ct);
         customer.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
         await audit.LogAsync("Customer", id.ToString(), "Updated", req, ct);

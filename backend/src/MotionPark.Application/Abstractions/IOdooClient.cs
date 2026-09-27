@@ -18,6 +18,9 @@ public interface IOdooClient
     /// <summary>Creates (or matches) a res.partner. Returns the Odoo id, or null on failure.</summary>
     Task<string?> CreatePartnerAsync(Dictionary<string, object?> fields, CancellationToken ct = default);
 
+    /// <summary>Writes changed profile fields (name, email, phone) to an existing res.partner.</summary>
+    Task UpdatePartnerAsync(string partnerId, Dictionary<string, object?> fields, CancellationToken ct = default);
+
     /// <summary>Creates a subscription via motionpark.api.create_subscription. Returns result dict or null on failure.</summary>
     Task<Dictionary<string, object?>?> CreateSubscriptionAsync(Dictionary<string, object?> payload, CancellationToken ct = default);
 

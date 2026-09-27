@@ -7,10 +7,11 @@ import { PublicService } from '../../services/public.service';
 import { EmptyComponent } from '../../shared/empty.component';
 import { IconComponent } from '../../shared/icon.component';
 import { LoadingComponent } from '../../shared/loading.component';
+import { HoursPipe } from '../../shared/hours.pipe';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IconComponent, LoadingComponent, EmptyComponent],
+  imports: [HoursPipe, RouterLink, IconComponent, LoadingComponent, EmptyComponent],
   template: `
     <section class="page-band">
       <div class="container">
@@ -37,7 +38,7 @@ import { LoadingComponent } from '../../shared/loading.component';
                 <p class="city">{{ b.city }}</p>
                 <ul class="facts">
                   <li><app-icon name="map-pin" size="0.95rem" /> {{ b.address }}</li>
-                  <li><app-icon name="clock" size="0.95rem" /> {{ b.operatingHours }}</li>
+                  <li><app-icon name="clock" size="0.95rem" /> {{ b.operatingHours | hours:i18n.lang() }}</li>
                   @if (b.phone) {
                     <li><app-icon name="phone" size="0.95rem" /> {{ b.phone }}</li>
                   }

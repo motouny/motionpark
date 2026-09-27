@@ -47,6 +47,7 @@ public sealed class UpdateProfileHandler(IApplicationDbContext db)
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == cmd.UserId, ct)
             ?? throw new NotFoundException("USER_NOT_FOUND", "User not found.");
         var customer = await db.Customers.FirstOrDefaultAsync(c => c.UserId == cmd.UserId, ct);
+        var (nameBefore, emailBefore) = (customer?.Name, customer?.Email);
 
         if (!string.IsNullOrWhiteSpace(cmd.Name))
         {
@@ -64,6 +65,9 @@ public sealed class UpdateProfileHandler(IApplicationDbContext db)
         if (cmd.DateOfBirth.HasValue && customer is not null) customer.DateOfBirth = cmd.DateOfBirth;
         if (!string.IsNullOrWhiteSpace(cmd.Gender) && customer is not null) customer.Gender = cmd.Gender;
 
+        if (customer is not null && (customer.Name != nameBefore || customer.Email != emailBefore))
+            await SyncJobQueue.EnqueuePartnerUpdateAsync(db, customer.Id, ct);
+
         user.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
         return new ProfileDto(customer?.Id ?? user.Id, customer?.Name ?? user.Name,
@@ -71,6 +75,7 @@ public sealed class UpdateProfileHandler(IApplicationDbContext db)
             customer?.Phone ?? user.Phone, user.PreferredLanguage,
             customer?.DateOfBirth, customer?.Gender);
     }
+
 }
 
 public sealed class GetMembershipHandler(IApplicationDbContext db)

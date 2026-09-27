@@ -4,6 +4,8 @@ import { CmsTextPipe } from '../../../shared/cms-text.pipe';
 import { IconComponent } from '../../../shared/icon.component';
 import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
 
+interface HeroStat { value: string; outOf: string; label: string }
+
 @Component({
   selector: 'app-hero-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,12 +42,12 @@ import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
             </button>
           </div>
           <dl class="stats">
-            <div><dt>{{ i18n.t('hero.stat1v') }}</dt><dd>{{ i18n.t('hero.stat1l') }}</dd></div>
-            <div><dt>{{ i18n.t('hero.stat2v') }}</dt><dd>{{ i18n.t('hero.stat2l') }}</dd></div>
-            <div>
-              <dt>{{ i18n.t('hero.stat3v') }}<span class="slash">/5</span></dt>
-              <dd>{{ i18n.t('hero.stat3l') }}</dd>
-            </div>
+            @for (stat of stats(); track $index) {
+              <div>
+                <dt>{{ stat.value }}@if (stat.outOf) {<span class="slash">{{ stat.outOf }}</span>}</dt>
+                <dd>{{ stat.label }}</dd>
+              </div>
+            }
           </dl>
         </div>
       </div>
@@ -181,6 +183,26 @@ export class HeroSectionComponent {
   protected readonly titleA = computed(() => this.cms.transform(this.content, 'titleA', this.i18n.t('hero.titleA')));
   protected readonly titleB = computed(() => this.cms.transform(this.content, 'titleB', this.i18n.t('hero.titleB')));
   protected readonly subtitle = computed(() => this.cms.transform(this.content, 'subtitle', this.i18n.t('hero.subtitle')));
+
+  /** CMS `stats: [{ value, labelAr, labelEn }]` (editable in the admin homepage sections), else the defaults. */
+  protected readonly stats = computed<HeroStat[]>(() => {
+    const lang = this.i18n.lang();
+    const raw = this.content?.['stats'];
+    if (Array.isArray(raw) && raw.length) {
+      return raw
+        .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
+        .map((x) => {
+          const [value, outOf] = String(x['value'] ?? '').split('/');
+          const label = String((lang === 'en' ? x['labelEn'] || x['labelAr'] : x['labelAr'] || x['labelEn']) ?? '');
+          return { value, outOf: outOf ? `/${outOf}` : '', label };
+        });
+    }
+    return [
+      { value: this.i18n.t('hero.stat1v'), outOf: '', label: this.i18n.t('hero.stat1l') },
+      { value: this.i18n.t('hero.stat2v'), outOf: '', label: this.i18n.t('hero.stat2l') },
+      { value: this.i18n.t('hero.stat3v'), outOf: '/5', label: this.i18n.t('hero.stat3l') },
+    ];
+  });
 
   protected scrollToActivities(): void {
     document.getElementById('activities')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

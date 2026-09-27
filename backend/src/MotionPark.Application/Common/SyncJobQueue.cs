@@ -9,6 +9,24 @@ public static class SyncJobQueue
     public static readonly TimeSpan StuckAfter = TimeSpan.FromMinutes(15);
 
     /// <summary>
+    /// Queues a PartnerSync update so Odoo gets the customer's new name/email/phone (added to the
+    /// context; the caller saves). One pending update per customer is enough: it sends current values.
+    /// </summary>
+    public static async Task EnqueuePartnerUpdateAsync(IApplicationDbContext db, Guid customerId, CancellationToken ct)
+    {
+        var prefix = $"partner-update:{customerId}:";
+        if (await db.OdooSyncJobs.AnyAsync(j => j.JobType == SyncJobType.PartnerSync
+                && j.Status == IntegrationStatus.Pending && j.MotionParkTransactionId.StartsWith(prefix), ct))
+            return;
+        db.OdooSyncJobs.Add(new Domain.Integrations.OdooSyncJob
+        {
+            JobType = SyncJobType.PartnerSync,
+            Payload = System.Text.Json.JsonSerializer.Serialize(new { customerId, update = true }),
+            MotionParkTransactionId = prefix + Guid.NewGuid().ToString("N"),
+        });
+    }
+
+    /// <summary>
     /// A job left in Processing (the API restarted mid-job, or saving its outcome failed) is never picked up
     /// again by the worker. Put it back in the queue; the processors are idempotent.
     /// </summary>

@@ -12,3 +12,4 @@ export * from './activity-visual.component';
 export * from './section-head.component';
 export * from './lead-dialog.component';
 export * from './qr-display.component';
+export * from './hours.pipe';

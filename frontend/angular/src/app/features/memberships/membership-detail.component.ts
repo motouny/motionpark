@@ -78,6 +78,13 @@ import { ErrorStateComponent } from '../../shared/error-state.component';
               <div class="payment-form">
                 <h3>{{ i18n.t('membershipsPage.payTitle') }}</h3>
                 <p class="secure"><app-icon name="check" size="0.8rem" /> {{ i18n.t('membershipsPage.paySecure') }}</p>
+                @if (testMode()) {
+                  <p class="test-mode" role="note">
+                    <app-icon name="alert" size="0.9rem" />
+                    <span>{{ i18n.t('membershipsPage.payTestMode') }}
+                      <a href="https://docs.moyasar.com/guides/card-payments/test-cards" target="_blank" rel="noopener">{{ i18n.t('membershipsPage.payTestCards') }}</a></span>
+                  </p>
+                }
                 <div id="moyasar-form" class="mysr-form"></div>
               </div>
             } @else {
@@ -163,6 +170,12 @@ import { ErrorStateComponent } from '../../shared/error-state.component';
     .payment-form {
       h3 { margin-bottom: .35rem; }
       .secure { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--muted-foreground); margin-bottom: 1rem; }
+      .test-mode {
+        display: flex; gap: .5rem; align-items: flex-start; margin-bottom: 1rem; padding: .75rem 1rem;
+        border-radius: 12px; border: 1px dashed rgba(251,146,60,.6); background: rgba(251,146,60,.08);
+        color: #fdba74; font-size: .82rem; line-height: 1.7;
+        a { color: #fff; text-decoration: underline; }
+      }
       .mysr-form { background: #fff; border-radius: 16px; padding: 1rem; color: #111; }
     }
     .side .muted { color: var(--muted-foreground); font-size: .88rem; margin-bottom: 1.25rem; }
@@ -185,6 +198,8 @@ export class MembershipDetailComponent {
   protected readonly subscribing = signal(false);
   protected readonly paymentPending = signal(false);
   protected readonly showPaymentForm = signal(false);
+  /** Moyasar test keys (pk_test_…): only test cards work and nobody is charged. */
+  protected readonly testMode = signal(false);
 
   private readonly slug = signal(this.route.snapshot.paramMap.get('slug') ?? '');
   protected readonly loader = createLoader(() => this.publicService.membershipPlans(), []);
@@ -223,6 +238,7 @@ export class MembershipDetailComponent {
         }
         this.payments.savePending({ planId: plan.id, planSlug: plan.slug, idempotencyKey: checkout.idempotencyKey });
         this.subscribing.set(false);
+        this.testMode.set(checkout.publishableKey?.startsWith('pk_test_') ?? false);
         this.showPaymentForm.set(true);
         afterNextRender(() => {
           this.payments.mountMoyasarForm('#moyasar-form', checkout, this.i18n.lang() === 'ar' ? 'ar' : 'en').catch(() => {

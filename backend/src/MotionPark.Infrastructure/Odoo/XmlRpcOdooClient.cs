@@ -90,7 +90,7 @@ public sealed class XmlRpcOdooClient : IOdooClient
             ["external_uuid"] = uuid ?? string.Empty,
             ["email"] = email ?? string.Empty,
             ["mobile"] = mobile ?? string.Empty,
-            ["lang"] = "ar_SA",
+            ["lang"] = "ar_SY",
         };
         var result = await ExecuteKwAsync("motionpark.customer.sync", "find_or_create_partner",
             [vals], new Dictionary<string, object?>(), ct);

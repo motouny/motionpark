@@ -151,7 +151,7 @@ public class MembershipsController(ISender sender) : ControllerBase
     public async Task<IActionResult> CreateSubscription([FromBody] CreateSubscriptionRequest request, CancellationToken ct)
     {
         var key = HttpContext.Request.Headers["Idempotency-Key"].FirstOrDefault() ?? request.IdempotencyKey;
-        var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub") is { } c && Guid.TryParse(c.Value, out var id)
+        var userId = HttpContext.User.Claims.FirstOrDefault(c => (c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)) is { } c && Guid.TryParse(c.Value, out var id)
             ? id : throw new UnauthorizedAppException("Invalid token.");
         return Ok(await sender.Send(new CreateSubscriptionCommand(
             userId, request.MembershipPlanId, request.BranchId, request.PaymentMethodId, key), ct));
@@ -161,7 +161,7 @@ public class MembershipsController(ISender sender) : ControllerBase
     [Authorize]
     public async Task<IActionResult> CancelSubscription(Guid id, [FromBody] CancelSubscriptionRequest? request, CancellationToken ct)
     {
-        var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub") is { } c && Guid.TryParse(c.Value, out var uid)
+        var userId = HttpContext.User.Claims.FirstOrDefault(c => (c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)) is { } c && Guid.TryParse(c.Value, out var uid)
             ? uid : throw new UnauthorizedAppException("Invalid token.");
         return Ok(await sender.Send(new CancelSubscriptionCommand(userId, id, request?.Reason), ct));
     }
@@ -170,7 +170,7 @@ public class MembershipsController(ISender sender) : ControllerBase
     [Authorize]
     public async Task<IActionResult> RenewSubscription(Guid id, CancellationToken ct)
     {
-        var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub") is { } c && Guid.TryParse(c.Value, out var uid)
+        var userId = HttpContext.User.Claims.FirstOrDefault(c => (c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)) is { } c && Guid.TryParse(c.Value, out var uid)
             ? uid : throw new UnauthorizedAppException("Invalid token.");
         return Ok(await sender.Send(new RenewSubscriptionCommand(userId, id), ct));
     }

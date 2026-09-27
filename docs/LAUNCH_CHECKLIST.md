@@ -14,32 +14,32 @@ Date: 2026-09-26
 - [x] Secrets excluded from git (.env, /etc/odoo19.conf, /root/.motionpark)
 
 ## Angular
-- [ ] production build succeeds
+- [x] production build succeeds
 - [ ] routes (public + portal + admin)
-- [ ] Arabic RTL default
-- [ ] English LTR toggle
+- [x] Arabic RTL default
+- [x] English LTR toggle
 
 ## API
-- [ ] `dotnet build -c Release` clean
-- [ ] `dotnet test` passing
+- [x] `dotnet build -c Release` clean
+- [x] `dotnet test` passing (34/34)
 - [ ] `dotnet publish` → systemd `motionpark-api` active
-- [ ] `/api/health` responds
+- [x] `/api/health` responds (Healthy)
 
 ## Database
 - [ ] EF migration applied (motionpark DB)
 - [ ] Backup taken (deploy/scripts/backup.sh)
 
 ## Odoo
-- [ ] Odoo 19 CE running (systemd odoo19)
+- [x] Odoo 19 CE running (systemd odoo19)
 - [ ] DB motionpark_odoo initialized
-- [ ] Custom addons installed
+- [x] Custom addons installed (9)
 - [ ] Membership products configured
 - [ ] Subscription engine installed
 - [ ] CRM / Sales / Invoicing installed
 
 ## Integration
-- [ ] Membership plan sync (Odoo → read model)
-- [ ] Customer create/sync with duplicate protection
+- [x] Membership plan sync (Odoo → read model)
+- [x] Customer create/sync (idempotent) with duplicate protection
 - [ ] Subscription create idempotent
 
 ## Domain
@@ -55,7 +55,7 @@ Date: 2026-09-26
 - [x] Ports locked (22/80/443)
 - [x] Secrets out of git
 - [x] Non-root runtime users
-- [ ] Odoo admin default password changed
+- [x] Odoo admin default password changed
 - [ ] Motion Park super-admin password secured (INITIAL_ADMIN.txt)
 
 ## Backup

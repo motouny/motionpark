@@ -4,19 +4,24 @@ import { CmsTextPipe } from '../../../shared/cms-text.pipe';
 import { IconComponent } from '../../../shared/icon.component';
 import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
 
+interface HeroStat { value: string; outOf: string; label: string }
+
 @Component({
   selector: 'app-hero-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [IconComponent, LeadDialogComponent],
   template: `
     <section class="hero" id="top">
-      <div class="hero-art" aria-hidden="true">
-        <div class="hero-grid"></div>
-        <div class="orbit orbit-one"></div>
-        <div class="orbit orbit-two"></div>
-        <div class="blob blob-a"></div>
-        <div class="blob blob-b"></div>
-      </div>
+      <picture class="hero-media" aria-hidden="true">
+        <source type="image/webp"
+          srcset="assets/images/motion-park-hero-800.webp 800w, assets/images/motion-park-hero-1440.webp 1440w, assets/images/motion-park-hero-2560.webp 2560w"
+          sizes="100vw" />
+        <img
+          src="assets/images/motion-park-hero-1440.jpg"
+          srcset="assets/images/motion-park-hero-800.jpg 800w, assets/images/motion-park-hero-1440.jpg 1440w, assets/images/motion-park-hero-2560.jpg 2560w"
+          sizes="100vw" width="2560" height="1440" alt="" fetchpriority="high" decoding="async" />
+      </picture>
+      <div class="hero-shade" aria-hidden="true"></div>
 
       <div class="container hero-inner">
         <div class="hero-copy">
@@ -26,7 +31,7 @@ import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
           </div>
           <h1>
             {{ titleA() }}<br />
-            <span class="gradient-text">{{ titleB() }}</span>
+            <span class="accent">{{ titleB() }}</span>
           </h1>
           <p class="subtitle">{{ subtitle() }}</p>
           <div class="ctas">
@@ -40,12 +45,12 @@ import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
             </button>
           </div>
           <dl class="stats">
-            <div><dt>{{ i18n.t('hero.stat1v') }}</dt><dd>{{ i18n.t('hero.stat1l') }}</dd></div>
-            <div><dt>{{ i18n.t('hero.stat2v') }}</dt><dd>{{ i18n.t('hero.stat2l') }}</dd></div>
-            <div>
-              <dt>{{ i18n.t('hero.stat3v') }}<span class="slash">/5</span></dt>
-              <dd>{{ i18n.t('hero.stat3l') }}</dd>
-            </div>
+            @for (stat of stats(); track $index) {
+              <div>
+                <dt dir="ltr">{{ stat.value }}@if (stat.outOf) {<span class="slash">{{ stat.outOf }}</span>}</dt>
+                <dd>{{ stat.label }}</dd>
+              </div>
+            }
           </dl>
         </div>
       </div>
@@ -62,53 +67,47 @@ import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
     .hero {
       position: relative;
       overflow: hidden;
-      min-height: 780px;
-      background: var(--background);
+      min-height: min(100svh, 920px);
+      background: var(--mp-ink);
       padding-top: 76px;
+      isolation: isolate;
     }
-    .hero-art {
-      position: absolute; inset: 0;
-      .hero-grid {
-        position: absolute; inset: 0; opacity: .5;
-        background-image:
-          linear-gradient(rgba(245,245,247,.055) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(245,245,247,.055) 1px, transparent 1px);
-        background-size: 68px 68px;
-        mask-image: linear-gradient(to left, black, transparent 68%);
+    /* The athlete sits on the physical right of the photo; the copy always takes the dark left side. */
+    .hero-media {
+      position: absolute; inset: 0; z-index: -2;
+      img {
+        width: 100%; height: 100%;
+        object-fit: cover; object-position: 72% 30%;
+        animation: hero-in 1.6s var(--ease-out) both;
       }
-      .orbit {
-        position: absolute; border-radius: 9999px; pointer-events: none;
-      }
-      .orbit-one {
-        inset-inline-end: -70px; top: 155px;
-        width: 500px; height: 500px;
-        border: 1px solid rgba(255,255,255,.12);
-        box-shadow: inset 0 0 120px rgba(255,64,129,.08);
-        transform: rotate(-20deg);
-        animation: drift 12s ease-in-out infinite alternate;
-      }
-      .orbit-two {
-        inset-inline-end: 150px; bottom: -170px;
-        width: 310px; height: 310px;
-        border: 34px solid rgba(138,43,226,.18);
-        animation: drift 9s ease-in-out infinite alternate-reverse;
-      }
-      .blob { position: absolute; border-radius: 50%; filter: blur(90px); }
-      .blob-a { width: 420px; height: 420px; inset-inline-end: 8%; top: 22%; background: radial-gradient(circle, rgba(255,64,129,.24), transparent 65%); }
-      .blob-b { width: 360px; height: 360px; inset-inline-end: 24%; top: 44%; background: radial-gradient(circle, rgba(138,43,226,.26), transparent 65%); }
     }
-    @keyframes drift {
-      from { transform: rotate(-20deg) translate3d(0, 0, 0); }
-      to { transform: rotate(-8deg) translate3d(-10px, 12px, 0); }
+    .hero-shade {
+      position: absolute; inset: 0; z-index: -1;
+      background:
+        linear-gradient(90deg, rgba(18,18,24,.92) 0%, rgba(18,18,24,.7) 34%, rgba(18,18,24,.12) 62%, transparent 78%),
+        linear-gradient(0deg, var(--mp-ink) 0%, rgba(18,18,24,0) 28%),
+        linear-gradient(180deg, rgba(18,18,24,.65) 0%, rgba(18,18,24,0) 22%);
+    }
+    .accent { color: var(--mp-fuchsia); }
+    @keyframes hero-in {
+      from { opacity: 0; transform: scale(1.06); }
+      to { opacity: 1; transform: scale(1); }
     }
     .hero-inner {
       position: relative;
       display: flex;
       align-items: center;
-      min-height: 704px;
-      padding-block: 5rem;
+      /* physical left in both directions (the photo's negative space) */
+      justify-content: flex-end;
+      min-height: calc(min(100svh, 920px) - 76px);
+      padding-block: 5rem 6.5rem;
     }
-    .hero-copy { max-width: 640px; }
+    :host-context([dir='ltr']) .hero-inner { justify-content: flex-start; }
+    .hero-copy { max-width: 600px; animation: copy-in .9s .15s var(--ease-out) both; }
+    @keyframes copy-in {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: none; }
+    }
     .badge {
       display: inline-flex; align-items: center; gap: .55rem;
       border-radius: 9999px;
@@ -150,6 +149,7 @@ import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
       .slash { color: #FF7A00; font-size: 1.1rem; }
       dd { margin: .2rem 0 0; font-size: .88rem; color: rgba(245,245,247,.55); }
     }
+    :host-context([dir='rtl']) .stats dt { text-align: right; }
     .scroll-hint {
       position: absolute; bottom: 1.75rem; inset-inline: 1.25rem;
       display: flex; align-items: center; justify-content: space-between;
@@ -159,13 +159,25 @@ import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
       color: rgba(245,245,247,.4);
       .line { height: 1px; width: 6rem; background: linear-gradient(to left, #FF4081, transparent); }
     }
-    @media (max-width: 640px) {
-      .hero { min-height: 725px; }
-      .orbit-one { width: 340px; height: 340px; top: 185px; inset-inline-end: -150px; }
-      .orbit-two { inset-inline-end: -70px; bottom: -70px; }
+    /* Phones: the photo takes the top of the screen and the copy sits below it on ink. */
+    /* Phones and tablets: the photo leads at the top and the copy follows on ink. */
+    @media (max-width: 1023px) {
+      .hero { min-height: 0; }
+      .hero-media, .hero-shade { top: 36px; bottom: auto; height: 480px; }
+      .hero-media img { object-position: 76% 0%; }
+      .hero-shade {
+        background: linear-gradient(0deg, var(--mp-ink) 0%, rgba(18,18,24,.35) 38%, rgba(18,18,24,.1) 65%, rgba(18,18,24,.6) 100%);
+      }
+      .hero-inner { min-height: 0; align-items: flex-start; padding-block: 330px 4.5rem; }
+      .stats { gap: 1.25rem; margin-top: 2.5rem; }
+      .scroll-hint { display: none; }
+    }
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .hero-media, .hero-shade { height: 620px; }
+      .hero-inner { padding-top: 440px; justify-content: flex-start; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .orbit { animation: none; }
+      .hero-media img, .hero-copy { animation: none; }
     }
   `,
 })
@@ -181,6 +193,26 @@ export class HeroSectionComponent {
   protected readonly titleA = computed(() => this.cms.transform(this.content, 'titleA', this.i18n.t('hero.titleA')));
   protected readonly titleB = computed(() => this.cms.transform(this.content, 'titleB', this.i18n.t('hero.titleB')));
   protected readonly subtitle = computed(() => this.cms.transform(this.content, 'subtitle', this.i18n.t('hero.subtitle')));
+
+  /** CMS `stats: [{ value, labelAr, labelEn }]` (editable in the admin homepage sections), else the defaults. */
+  protected readonly stats = computed<HeroStat[]>(() => {
+    const lang = this.i18n.lang();
+    const raw = this.content?.['stats'];
+    if (Array.isArray(raw) && raw.length) {
+      return raw
+        .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
+        .map((x) => {
+          const [value, outOf] = String(x['value'] ?? '').split('/');
+          const label = String((lang === 'en' ? x['labelEn'] || x['labelAr'] : x['labelAr'] || x['labelEn']) ?? '');
+          return { value, outOf: outOf ? `/${outOf}` : '', label };
+        });
+    }
+    return [
+      { value: this.i18n.t('hero.stat1v'), outOf: '', label: this.i18n.t('hero.stat1l') },
+      { value: this.i18n.t('hero.stat2v'), outOf: '', label: this.i18n.t('hero.stat2l') },
+      { value: this.i18n.t('hero.stat3v'), outOf: '/5', label: this.i18n.t('hero.stat3l') },
+    ];
+  });
 
   protected scrollToActivities(): void {
     document.getElementById('activities')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

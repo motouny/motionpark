@@ -6,9 +6,10 @@ import { CmsTextPipe } from '../../../shared/cms-text.pipe';
 import { IconComponent } from '../../../shared/icon.component';
 import { LoadingComponent } from '../../../shared/loading.component';
 import { EmptyComponent } from '../../../shared/empty.component';
-import { ToastService } from '../../../shared/toast.service';
 import { createLoader } from '../../../core/loader';
 import { ScheduleEntry } from '../../../models';
+import { localDate } from '../../../core/dates';
+import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
 
 /** Day pill model for the homepage schedule preview. */
 export interface DayOption {
@@ -20,7 +21,7 @@ export interface DayOption {
 @Component({
   selector: 'app-schedule-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IconComponent, LoadingComponent, EmptyComponent],
+  imports: [LeadDialogComponent, RouterLink, IconComponent, LoadingComponent, EmptyComponent],
   template: `
     <section id="schedule" class="schedule-section">
       <div class="glow" aria-hidden="true"></div>
@@ -60,7 +61,12 @@ export interface DayOption {
           } @else if (loader.error()) {
             <app-empty [message]="i18n.t('common.error')" />
           } @else if (entries().length === 0) {
-            <app-empty [message]="i18n.t('schedulePage.empty')" />
+            <div class="soon">
+              <app-icon name="calendar" size="1.6rem" />
+              <strong>{{ i18n.t('homeSchedule.soonTitle') }}</strong>
+              <p>{{ i18n.t('homeSchedule.soonText') }}</p>
+              <button class="btn gradient-button" (click)="openTrial()">{{ i18n.t('nav.bookTrial') }}</button>
+            </div>
           } @else {
             <ul class="class-list">
               @for (entry of entries(); track entry.id) {
@@ -84,8 +90,19 @@ export interface DayOption {
         </div>
       </div>
     </section>
+
+    <app-lead-dialog [interest]="leadInterest()" [isOpen]="leadOpen()" (close)="leadOpen.set(false)" />
   `,
   styles: `
+    .soon {
+      display: grid; justify-items: center; gap: .75rem;
+      padding: 2.5rem 1.5rem; text-align: center;
+      color: var(--mp-muted);
+      app-icon { color: var(--mp-orange); }
+      strong { font-size: 1.15rem; color: var(--mp-white); }
+      p { max-width: 360px; font-size: 1rem; }
+      .btn { margin-top: .5rem; }
+    }
     .schedule-section { position: relative; overflow: hidden; background: var(--schedule-surface); padding: 96px 0; }
     .glow {
       position: absolute; top: 4rem; inset-inline-end: -8rem;
@@ -145,7 +162,6 @@ export interface DayOption {
 export class ScheduleSectionComponent {
   protected readonly i18n = inject(I18nService);
   private readonly publicService = inject(PublicService);
-  private readonly toast = inject(ToastService);
 
   @Input() content: Record<string, unknown> | null | undefined = null;
 
@@ -159,6 +175,7 @@ export class ScheduleSectionComponent {
     [],
   );
 
+  /** Only real classes are listed; a day with none published invites a trial request instead. */
   protected readonly entries = computed(() => this.loader.data());
 
   constructor() {
@@ -190,14 +207,24 @@ export class ScheduleSectionComponent {
     return this.i18n.t('homeSchedule.seatsFew', { n });
   }
 
+  protected readonly leadOpen = signal(false);
+  protected readonly leadInterest = signal<string | null>(null);
+
+  /** Visitors book through the "start today" form; members book from the full schedule page. */
+  protected openTrial(): void {
+    this.leadInterest.set(null);
+    this.leadOpen.set(true);
+  }
+
   protected book(entry: ScheduleEntry): void {
-    this.toast.info(this.i18n.t('schedulePage.confirmTitle'), this.activityName(entry));
+    this.leadInterest.set(this.activityName(entry));
+    this.leadOpen.set(true);
   }
 
   private buildDays(): DayOption[] {
     const days: DayOption[] = [];
     const fmt = new Intl.DateTimeFormat(this.i18n.lang() === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long' });
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 4; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
       const label = i === 0
@@ -205,7 +232,7 @@ export class ScheduleSectionComponent {
         : i === 1
           ? this.i18n.lang() === 'ar' ? 'غداً' : 'Tomorrow'
           : fmt.format(d);
-      days.push({ key: d.toISOString(), date: d.toISOString().slice(0, 10), label });
+      days.push({ key: d.toISOString(), date: localDate(d), label });
     }
     return days;
   }

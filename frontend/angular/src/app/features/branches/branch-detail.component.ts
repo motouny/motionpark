@@ -6,10 +6,11 @@ import { PublicService } from '../../services/public.service';
 import { IconComponent } from '../../shared/icon.component';
 import { LoadingComponent } from '../../shared/loading.component';
 import { ErrorStateComponent } from '../../shared/error-state.component';
+import { HoursPipe } from '../../shared/hours.pipe';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IconComponent, LoadingComponent, ErrorStateComponent],
+  imports: [HoursPipe, RouterLink, IconComponent, LoadingComponent, ErrorStateComponent],
   template: `
     @if (loader.loading()) {
       <div style="min-height: 60vh; display: grid; place-items: center;"><app-loading /></div>
@@ -34,7 +35,7 @@ import { ErrorStateComponent } from '../../shared/error-state.component';
             <h2>{{ i18n.t('branchesPage.address') }}</h2>
             <p class="addr">{{ branch()!.address }}</p>
             <h2>{{ i18n.t('branchesPage.hours') }}</h2>
-            <p class="addr">{{ branch()!.operatingHours }}</p>
+            <p class="addr">{{ branch()!.operatingHours | hours:i18n.lang() }}</p>
             <div class="actions">
               @if (branch()!.phone) {
                 <a class="btn btn-ghost btn-sm" [href]="'tel:' + branch()!.phone">

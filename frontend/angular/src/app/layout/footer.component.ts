@@ -12,7 +12,7 @@ import { IconComponent } from '../shared/icon.component';
       <div class="container">
         <div class="grid">
           <div>
-            <img src="assets/brand/logo-light.svg" alt="Motion Park" height="56" width="228" />
+            <img src="assets/brand/motion-park-logo-light-v2.png" alt="Motion Park" height="52" width="215" loading="lazy" />
             <p class="tagline">{{ i18n.t('footer.tagline') }}</p>
           </div>
           <div>
@@ -21,8 +21,6 @@ import { IconComponent } from '../shared/icon.component';
               <a routerLink="/activities">{{ i18n.t('nav.activities') }}</a>
               <a routerLink="/schedule">{{ i18n.t('nav.schedule') }}</a>
               <a routerLink="/memberships">{{ i18n.t('nav.memberships') }}</a>
-              <a routerLink="/coaches">{{ i18n.t('nav.coaches') }}</a>
-              <a routerLink="/branches">{{ i18n.t('nav.branches') }}</a>
               <a routerLink="/about">{{ i18n.t('nav.about') }}</a>
             </nav>
           </div>
@@ -38,8 +36,8 @@ import { IconComponent } from '../shared/icon.component';
         <div class="bottom">
           <span>{{ i18n.t('footer.rights') }}</span>
           <nav class="legal" [attr.aria-label]="i18n.t('footer.legal')">
-            <a routerLink="/privacy">{{ i18n.t('footer.legal') }}</a>
-            <a routerLink="/terms">{{ i18n.t('footer.legal') }}</a>
+            <a routerLink="/privacy">{{ i18n.t('footer.privacy') }}</a>
+            <a routerLink="/terms">{{ i18n.t('footer.terms') }}</a>
           </nav>
           <span class="motto">{{ i18n.t('footer.motto') }}</span>
         </div>

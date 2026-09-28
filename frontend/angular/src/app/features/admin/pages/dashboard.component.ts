@@ -27,26 +27,13 @@ import { ErrorStateComponent } from '../../../shared/error-state.component';
       <app-error-state [message]="i18n.t('common.error')" (retry)="statsLoader.reload()" />
     } @else {
       <div class="stat-grid">
-        <div class="stat-card">
-          <app-icon name="user" size="1.3rem" />
-          <strong>{{ stats().totalCustomers ?? 0 }}</strong>
-          <span>{{ i18n.t('admin.totalCustomers') }}</span>
-        </div>
-        <div class="stat-card">
-          <app-icon name="check" size="1.3rem" />
-          <strong>{{ stats().totalBookings ?? 0 }}</strong>
-          <span>{{ i18n.t('admin.totalBookings') }}</span>
-        </div>
-        <div class="stat-card">
-          <app-icon name="bell" size="1.3rem" />
-          <strong>{{ stats().totalLeads ?? 0 }}</strong>
-          <span>{{ i18n.t('admin.totalLeads') }}</span>
-        </div>
-        <div class="stat-card">
-          <app-icon name="card" size="1.3rem" />
-          <strong>{{ stats().activeMemberships ?? 0 }}</strong>
-          <span>{{ i18n.t('admin.activeMemberships') }}</span>
-        </div>
+        @for (card of statCards(); track card.label) {
+          <div class="stat-card">
+            <app-icon [name]="card.icon" size="1.3rem" />
+            <strong>{{ card.value }}</strong>
+            <span>{{ i18n.t(card.label) }}</span>
+          </div>
+        }
       </div>
 
       <div class="cards-row">
@@ -112,6 +99,17 @@ export class AdminDashboardComponent {
     {},
   );
   protected readonly stats = computed(() => this.statsLoader.data());
+  protected readonly statCards = computed(() => {
+    const s = this.stats();
+    return [
+      { icon: 'user', value: s.customers ?? 0, label: 'admin.totalCustomers' },
+      { icon: 'card', value: s.activeMemberships ?? 0, label: 'admin.activeMemberships' },
+      { icon: 'clock', value: s.pendingMemberships ?? 0, label: 'admin.pendingMemberships' },
+      { icon: 'check', value: s.bookingsToday ?? 0, label: 'admin.bookingsToday' },
+      { icon: 'users', value: s.waitingList ?? 0, label: 'admin.waitingList' },
+      { icon: 'bell', value: s.leadsNew ?? 0, label: 'admin.newLeads' },
+    ];
+  });
 
   protected readonly odooLoader = createLoader<OdooStatus>(
     () => this.odooIntegration.status().pipe(catchError(() => of({ connected: false, failedJobs: 0, pendingQueue: 0 }))),

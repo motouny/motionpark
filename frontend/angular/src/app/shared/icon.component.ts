@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 /**
  * Inline SVG icon set (stroke = currentColor, 24×24, Lucide-style).
@@ -58,38 +59,41 @@ const PATHS: Record<string, string> = {
   dot: '<circle cx="12" cy="12" r="6"/>',
 };
 
+/**
+ * The markup is built from the static PATHS table above (never from input), so it is safe to trust.
+ * It must be set as a whole `<svg>` string: binding innerHTML on an <svg> element makes Angular's
+ * sanitizer strip the SVG children, and children created that way land in the HTML namespace anyway.
+ */
 @Component({
   selector: 'app-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      [class.flip-on-ltr]="flip"
-      [style.width]="size"
-      [style.height]="size"
-      [innerHTML]="path"
-    ></svg>
-  `,
+  template: `<span class="icon" [class.flip-on-ltr]="flip" [innerHTML]="svg"></span>`,
   styles: `
     :host { display: inline-flex; line-height: 0; }
-    svg { display: block; }
-    svg.flip-on-ltr { }
-    :host-context([dir='ltr']) svg.flip-on-ltr { transform: scaleX(-1); }
+    .icon, .icon ::ng-deep svg { display: block; width: var(--icon-size); height: var(--icon-size); }
+    :host-context([dir='ltr']) .flip-on-ltr { transform: scaleX(-1); }
   `,
+  host: { '[style.--icon-size]': 'size' },
 })
 export class IconComponent {
+  private readonly sanitizer = inject(DomSanitizer);
+
   @Input({ required: true }) name!: keyof typeof PATHS & string;
   @Input() size = '1.15rem';
   @Input() flip = false;
 
-  get path(): string {
-    return PATHS[this.name] ?? PATHS['dot'];
+  private cachedName?: string;
+  private cachedSvg?: SafeHtml;
+
+  /** Cached per name so change detection doesn't rewrite the DOM on every pass. */
+  get svg(): SafeHtml {
+    if (this.cachedName !== this.name || !this.cachedSvg) {
+      const path = PATHS[this.name] ?? PATHS['dot'];
+      this.cachedName = this.name;
+      this.cachedSvg = this.sanitizer.bypassSecurityTrustHtml(
+        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ` +
+        `stroke-linejoin="round" aria-hidden="true" focusable="false">${path}</svg>`);
+    }
+    return this.cachedSvg;
   }
 }

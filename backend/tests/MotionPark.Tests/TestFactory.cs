@@ -82,12 +82,39 @@ public sealed class FakeOdooClient : IOdooClient
         PartnerCreateCount++;
         return Task.FromResult<string?>($"100{PartnerCreateCount}");
     }
+    public List<(string PartnerId, Dictionary<string, object?> Fields)> PartnerUpdates { get; } = [];
+    public Task UpdatePartnerAsync(string partnerId, Dictionary<string, object?> fields, CancellationToken ct = default)
+    {
+        if (!Reachable) throw new OdooUnavailableException("Odoo down");
+        PartnerUpdates.Add((partnerId, fields));
+        return Task.CompletedTask;
+    }
+    public List<Dictionary<string, object?>> SubscriptionPayloads { get; } = [];
+    public List<Dictionary<string, object?>> PaymentPayloads { get; } = [];
+    public bool FailPaymentRegistration { get; set; }
+
+    // Mirrors motionpark_api.create_subscription's reply shape.
     public Task<Dictionary<string, object?>?> CreateSubscriptionAsync(Dictionary<string, object?> payload, CancellationToken ct = default)
-        => Reachable
-            ? Task.FromResult<Dictionary<string, object?>?>(new Dictionary<string, object?> { ["subscription_id"] = 777 })
-            : throw new OdooUnavailableException("Odoo down");
+    {
+        if (!Reachable) throw new OdooUnavailableException("Odoo down");
+        SubscriptionPayloads.Add(payload);
+        return Task.FromResult<Dictionary<string, object?>?>(new Dictionary<string, object?>
+            { ["id"] = 777, ["name"] = "SUB/0001", ["status"] = "pending_payment", ["created"] = true });
+    }
+
+    public Task<string?> RegisterPaymentAsync(Dictionary<string, object?> vals, CancellationToken ct = default)
+    {
+        if (!Reachable || FailPaymentRegistration) throw new OdooUnavailableException("Odoo down");
+        PaymentPayloads.Add(vals);
+        return Task.FromResult<string?>("501");
+    }
+    public List<Dictionary<string, object?>> LeadPayloads { get; } = [];
     public Task<string?> CreateCrmLeadAsync(Dictionary<string, object?> fields, CancellationToken ct = default)
-        => Reachable ? Task.FromResult<string?>("2001") : throw new OdooUnavailableException("Odoo down");
+    {
+        if (!Reachable) throw new OdooUnavailableException("Odoo down");
+        LeadPayloads.Add(fields);
+        return Task.FromResult<string?>("2001");
+    }
 }
 
 public sealed class FakePaymentProvider(bool configured, bool succeeds = true) : IPaymentProvider

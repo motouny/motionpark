@@ -14,6 +14,10 @@ import { IconComponent } from '../../shared/icon.component';
 import { LoadingComponent } from '../../shared/loading.component';
 import { ToastService } from '../../shared/toast.service';
 import { BookingDialogComponent } from '../booking/booking-dialog.component';
+import { localDate } from '../../core/dates';
+
+/** Two weeks, so classes scheduled next week are reachable. */
+const SCHEDULE_DAYS = 14;
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -248,7 +252,7 @@ export class ScheduleComponent {
   }
 
   private today(): string {
-    return new Date().toISOString().slice(0, 10);
+    return localDate();
   }
 
   private buildDays(): { date: string; weekday: string; dayNum: string }[] {
@@ -256,10 +260,10 @@ export class ScheduleComponent {
     const weekdayFmt = new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'short' });
     const numFmt = new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric' });
     const result: { date: string; weekday: string; dayNum: string }[] = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < SCHEDULE_DAYS; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
-      result.push({ date: d.toISOString().slice(0, 10), weekday: weekdayFmt.format(d), dayNum: numFmt.format(d) });
+      result.push({ date: localDate(d), weekday: weekdayFmt.format(d), dayNum: numFmt.format(d) });
     }
     return result;
   }

@@ -13,6 +13,13 @@ import { IconComponent } from '../../shared/icon.component';
 import { LoadingComponent } from '../../shared/loading.component';
 import { ToastService } from '../../shared/toast.service';
 
+/** The API's schedule is flat (`activityNameAr`, `branchNameEn`, ...); build a `{ nameAr, nameEn }` pair from it. */
+function flat(b: Booking, prefix: 'activity' | 'coach' | 'branch'): Record<string, unknown> | null {
+  const s = b.schedule as Record<string, unknown> | null | undefined;
+  if (!s) return null;
+  return { nameAr: s[`${prefix}NameAr`], nameEn: s[`${prefix}NameEn`] };
+}
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, DatePipe, IconComponent, LoadingComponent, EmptyComponent, ErrorStateComponent],
@@ -107,34 +114,36 @@ export class BookingsComponent {
   }
 
   protected activityOf(b: Booking): string {
-    return this.i18n.pick((b.activity ?? b.schedule?.activity ?? null) as Record<string, unknown> | null) || this.i18n.t('account.bookings.schedule');
+    return this.i18n.pick(b.activity ?? b.schedule?.activity ?? flat(b, 'activity')) || this.i18n.t('account.bookings.schedule');
   }
 
   protected coachOf(b: Booking): string {
-    return this.i18n.pick((b.coach ?? b.schedule?.coach ?? null) as Record<string, unknown> | null);
+    return this.i18n.pick(b.coach ?? b.schedule?.coach ?? flat(b, 'coach'));
   }
 
   protected branchOf(b: Booking): string {
-    return this.i18n.pick((b.branch ?? b.schedule?.branch ?? null) as Record<string, unknown> | null);
+    return this.i18n.pick(b.branch ?? b.schedule?.branch ?? flat(b, 'branch'));
   }
 
   protected statusLabel(status: string): string {
-    const key = `account.status.${status}`;
+    const key = `account.status.${status.toLowerCase()}`;
     const value = this.i18n.t(key);
     return value === key ? status : value;
   }
 
   protected statusKind(status: string): string {
-    switch (status) {
-      case 'confirmed': case 'completed': case 'active': case 'paid': return 'success';
-      case 'pending': case 'pending_payment': case 'waitlisted': return 'warning';
+    switch (status.toLowerCase()) {
+      case 'confirmed': case 'reserved': case 'checkedin': case 'completed': case 'active': case 'paid': return 'success';
+      case 'pending': case 'pending_payment': case 'waitlisted': case 'waitinglist': return 'warning';
+      case 'noshow': return 'danger';
       case 'cancelled': case 'failed': return 'danger';
       default: return 'muted';
     }
   }
 
   protected isCancellable(b: Booking): boolean {
-    return ['confirmed', 'pending', 'waitlisted'].includes(b.status);
+    // API statuses: Reserved, Confirmed, CheckedIn, Cancelled, NoShow, WaitingList.
+    return ['reserved', 'confirmed', 'waitinglist', 'pending', 'waitlisted'].includes(b.status.toLowerCase());
   }
 
   protected cancel(b: Booking): void {

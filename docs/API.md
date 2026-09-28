@@ -92,7 +92,7 @@ Phone normalized `05xxxxxxxx` → `+9665xxxxxxxx`. Creates account + Odoo partne
 - GET /api/admin/media?search=&category=
 - POST /api/admin/media (multipart, multiple) → stored in `/var/www/motionpark/storage/media` (NOT git)
 - PUT /api/admin/media/{id} (altAr, altEn, title, category), DELETE /api/admin/media/{id}
-- GET /api/media/{id}/file → authorized file serving
+- GET /api/media/{id}/file → public file serving (media library content shown on the site; SVGs are sandboxed by CSP)
 ### Membership display: GET/PUT /api/admin/membership-plans (display/sort/featured overrides; price stays Odoo-owned)
 ### Customers: GET /api/admin/customers, GET/PUT /api/admin/customers/{id}
 ### Leads: GET /api/admin/leads, PUT /api/admin/leads/{id} (status)
@@ -115,4 +115,19 @@ Phone normalized `05xxxxxxxx` → `+9665xxxxxxxx`. Creates account + Odoo partne
 - GET /api/health/odoo → Odoo reachability (degraded, not fatal)
 
 ## Payments
-`IPaymentProvider` with `MockProvider` (dev only). Production without credentials → endpoints return `402 PAYMENT_CREDENTIALS_REQUIRED` (never fake success). Providers reserved: Mada, ApplePay, Visa/Mastercard.
+`IPaymentProvider` implementations: `moyasar` (production), `mock` (dev only). Production without credentials → endpoints return `402 PAYMENT_CREDENTIALS_REQUIRED` (never fake success).
+
+### Moyasar (mada, Visa/Mastercard, Apple Pay)
+Set `PAYMENT_PROVIDER=moyasar`, `PAYMENT_SECRET=sk_...`, `PAYMENT_KEY=pk_...`, `PAYMENT_CALLBACK_URL`.
+
+`paymentMethodId` on `POST /api/subscriptions` and `POST /api/subscriptions/{id}/renew` is one of:
+- **Moyasar payment id** — the browser pays with the Moyasar payment form (publishable key, `methods: ['creditcard','applepay']`, `metadata.customer_id` optional), which runs 3-D Secure for mada. The API fetches the payment with the secret key and accepts it only when it is `paid` (or `authorized`, which it captures) for the plan's exact amount and currency.
+- **`applepay:<Apple Pay payment token JSON>`** — native Apple Pay sheet; the API creates the payment server-side (`given_id` derived from the idempotency key).
+
+### POST /api/payments/checkout `{ membershipPlanId }` (auth)
+→ `{ provider, publishableKey, amount (halalas), currency, description, callbackUrl, idempotencyKey, metadata }` for the Moyasar form; `402` when payments are off. The Angular plan page renders the form with it, and Moyasar returns the customer to `/account/payments/callback?id=…&status=…`, which calls `POST /api/subscriptions` with the payment id and the same idempotency key.
+
+### POST /api/payments/moyasar/webhook (Moyasar → API)
+Register it in the Moyasar dashboard for `payment_paid` with secret `PAYMENT_WEBHOOK_SECRET`. It completes the subscription from the payment's metadata when the customer paid but never came back; it is a no-op when the callback already did. Returns `404` while `PAYMENT_WEBHOOK_SECRET` is unset, `401` on a wrong secret.
+
+A payment id can pay for one order only (`409 PAYMENT_ALREADY_USED`). Failures return `409 PAYMENT_FAILED` with the reason; `PaymentTransaction.FailureCode` keeps the detailed code (`PAYMENT_AMOUNT_MISMATCH`, `PAYMENT_NOT_COMPLETED`, `PAYMENT_DECLINED`, `PAYMENT_PROVIDER_UNAVAILABLE`, ...).

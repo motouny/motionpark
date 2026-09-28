@@ -16,7 +16,7 @@ import { ToastService } from '../shared/toast.service';
     <header class="site-header" [class.solid]="scrolled() || menuOpen()">
       <div class="bar container">
         <a routerLink="/" class="brand" [attr.aria-label]="'Motion Park — ' + i18n.t('nav.home')">
-          <img src="assets/brand/logo-light.svg" alt="Motion Park" height="46" width="187" />
+          <img src="assets/brand/motion-park-logo-light-v2.png" alt="Motion Park" height="44" width="182" />
         </a>
 
         <nav class="desktop-nav" [attr.aria-label]="i18n.t('nav.home')">
@@ -91,15 +91,15 @@ import { ToastService } from '../shared/toast.service';
       inset-inline: 0;
       top: 0;
       z-index: 60;
-      transition: background 300ms var(--ease-out), box-shadow 300ms var(--ease-out), border-color 300ms var(--ease-out);
+      transition: background 240ms var(--ease-out), border-color 240ms var(--ease-out);
       border-bottom: 1px solid transparent;
       background: transparent;
 
       &.solid {
-        background: rgba(18, 18, 24, .95);
-        backdrop-filter: blur(16px);
-        border-color: rgba(255, 255, 255, .1);
-        box-shadow: 0 14px 40px rgba(0, 0, 0, .24);
+        background: color-mix(in srgb, var(--mp-charcoal) 78%, transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-color: rgba(245, 245, 247, .08);
       }
     }
     .bar { display: flex; align-items: center; justify-content: space-between; height: 76px; gap: 1rem; }
@@ -155,8 +155,6 @@ export class HeaderComponent {
     { link: '/activities', label: this.i18n.t('nav.activities') },
     { link: '/schedule', label: this.i18n.t('nav.schedule') },
     { link: '/memberships', label: this.i18n.t('nav.memberships') },
-    { link: '/coaches', label: this.i18n.t('nav.coaches') },
-    { link: '/branches', label: this.i18n.t('nav.branches') },
     { link: '/about', label: this.i18n.t('nav.about') },
   ]);
 

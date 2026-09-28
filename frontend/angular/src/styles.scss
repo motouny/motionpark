@@ -4,6 +4,17 @@
    Motion Park design tokens — source: docs/ASSET_INVENTORY.md
    ============================================================ */
 :root {
+  /* Approved brand palette */
+  --mp-orange: #FF7A00;
+  --mp-fuchsia: #FF4081;
+  --mp-violet: #8A2BE2;
+  --mp-charcoal: #1A1A1A;
+  --mp-ink: #121218;
+  --mp-surface: #24242D;
+  --mp-white: #F5F5F7;
+  --mp-muted: #A8A8B3;
+  --mp-gradient: linear-gradient(135deg, #FF7A00 0%, #FF4081 48%, #8A2BE2 100%);
+
   --background: #121218;
   --foreground: #F5F5F7;
   --card: #24242D;
@@ -31,7 +42,7 @@
   --light-fg: #1A1A1A;
   --eyebrow: #FF9B50;
   --eyebrow-dark: #8A2BE2;
-  --gradient-button: linear-gradient(135deg, #FF7A00 0%, #FF4081 52%, #8A2BE2 100%);
+  --gradient-button: var(--mp-gradient);
   --gradient-text: linear-gradient(135deg, #FF9C20, #FF4081 49%, #B149F5);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }

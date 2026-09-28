@@ -10,10 +10,11 @@ import { ErrorStateComponent } from '../../../shared/error-state.component';
 import { IconComponent } from '../../../shared/icon.component';
 import { LoadingComponent } from '../../../shared/loading.component';
 import { ToastService } from '../../../shared/toast.service';
+import { HoursPipe, parseHours } from '../../../shared/hours.pipe';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, IconComponent, LoadingComponent, EmptyComponent, ErrorStateComponent],
+  imports: [HoursPipe, ReactiveFormsModule, IconComponent, LoadingComponent, EmptyComponent, ErrorStateComponent],
   template: `
     <div class="admin-page-head">
       <div>
@@ -50,8 +51,12 @@ import { ToastService } from '../../../shared/toast.service';
               <input class="form-input" formControlName="address" />
             </div>
             <div>
-              <label class="form-label">operatingHours</label>
-              <input class="form-input" formControlName="operatingHours" />
+              <label class="form-label">{{ i18n.t('branchesPage.hours') }} (AR)</label>
+              <input class="form-input" formControlName="hoursAr" />
+            </div>
+            <div>
+              <label class="form-label">{{ i18n.t('branchesPage.hours') }} (EN)</label>
+              <input class="form-input" formControlName="hoursEn" dir="ltr" />
             </div>
             <div>
               <label class="form-label">phone</label>
@@ -107,7 +112,7 @@ import { ToastService } from '../../../shared/toast.service';
               <tr>
                 <td><strong>{{ b.nameAr }}</strong><br /><small style="color: var(--muted-foreground)">{{ b.nameEn }}</small></td>
                 <td>{{ b.address ?? '—' }}</td>
-                <td>{{ b.operatingHours ?? '—' }}</td>
+                <td>{{ (b.operatingHours | hours:i18n.lang()) || '—' }}</td>
                 <td><span class="chip" [class]="'chip chip-' + (b.active ? 'success' : 'muted')">{{ b.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
                 <td>
                   <div class="table-actions">
@@ -139,7 +144,8 @@ export class BranchesAdminComponent {
     slug: ['', Validators.required],
     city: [''],
     address: [''],
-    operatingHours: [''],
+    hoursAr: [''],
+    hoursEn: [''],
     phone: [''],
     whatsapp: [''],
     latitude: [null as number | null],
@@ -156,7 +162,7 @@ export class BranchesAdminComponent {
   protected startCreate(): void {
     this.editing.set(null);
     this.form.reset({
-      nameAr: '', nameEn: '', slug: '', city: '', address: '', operatingHours: '', phone: '', whatsapp: '',
+      nameAr: '', nameEn: '', slug: '', city: '', address: '', hoursAr: '', hoursEn: '', phone: '', whatsapp: '',
       latitude: null, longitude: null, active: true,
     });
     this.formOpen.set(true);
@@ -170,7 +176,8 @@ export class BranchesAdminComponent {
       slug: b.slug,
       city: b.city ?? '',
       address: b.address ?? '',
-      operatingHours: b.operatingHours ?? '',
+      hoursAr: parseHours(b.operatingHours).ar,
+      hoursEn: parseHours(b.operatingHours).en,
       phone: b.phone ?? '',
       whatsapp: b.whatsapp ?? '',
       latitude: b.latitude ?? null,
@@ -189,7 +196,7 @@ export class BranchesAdminComponent {
       slug: value.slug ?? '',
       city: value.city || undefined,
       address: value.address || undefined,
-      operatingHours: value.operatingHours || undefined,
+      operatingHours: value.hoursAr || value.hoursEn ? { ar: value.hoursAr ?? '', en: value.hoursEn ?? '' } : undefined,
       phone: value.phone || undefined,
       whatsapp: value.whatsapp || undefined,
       latitude: value.latitude ?? undefined,

@@ -105,7 +105,7 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
         color: rgba(255,255,255,.6);
       }
       h3 { font-size: 1.5rem; font-weight: 900; }
-      p { margin-top: .5rem; font-size: .88rem; color: rgba(255,255,255,.72); }
+      p { margin-top: .5rem; font-size: 1rem; line-height: 1.6; color: rgba(255,255,255,.78); }
       .more {
         margin-top: 1.1rem; display: inline-flex; align-items: center; gap: .5rem;
         font-size: .88rem; font-weight: 700;

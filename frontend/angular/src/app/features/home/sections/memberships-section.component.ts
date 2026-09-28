@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PLAN_FEATURES } from '../../../core/fallback-data';
 import { createLoader } from '../../../core/loader';
@@ -10,11 +10,17 @@ import { IconComponent } from '../../../shared/icon.component';
 import { LoadingComponent } from '../../../shared/loading.component';
 import { EmptyComponent } from '../../../shared/empty.component';
 import { SectionHeadComponent } from '../../../shared/section-head.component';
+import { LeadDialogComponent } from '../../../shared/lead-dialog.component';
+
+/** 'Motion Plus (Odoo)' -> 'motion-plus', to find the approved feature list for Odoo-named plans. */
+function planKey(nameEn: string | undefined): string {
+  return (nameEn ?? '').toLowerCase().replace(/\(.*?\)/g, '').trim().replace(/\s+/g, '-');
+}
 
 @Component({
   selector: 'app-memberships-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DecimalPipe, IconComponent, LoadingComponent, EmptyComponent, SectionHeadComponent],
+  imports: [LeadDialogComponent, RouterLink, DecimalPipe, IconComponent, LoadingComponent, EmptyComponent, SectionHeadComponent],
   template: `
     <section id="membership" class="section memberships">
       <div class="container">
@@ -37,7 +43,7 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
                 @if (plan.featured) {
                   <span class="flag">{{ i18n.t('homeMemberships.mostPopular') }}</span>
                 }
-                <p class="desc">{{ i18n.pick(plan, 'descriptionAr', 'descriptionEn') }}</p>
+                @if (descOf(plan); as d) { <p class="desc">{{ d }}</p> }
                 <h3>{{ i18n.pick(plan) }}</h3>
                 <div class="price">
                   <strong>{{ plan.price | number: '1.0-0' }}</strong>
@@ -51,20 +57,24 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
                     </li>
                   }
                 </ul>
-                <a
-                  [routerLink]="['/memberships', plan.slug]"
+                <button
+                  type="button"
                   class="choose"
                   [class.gradient-button]="plan.featured"
                   [class.ghost]="!plan.featured"
+                  (click)="choose(plan)"
                 >
                   {{ i18n.t('homeMemberships.choose') }}
-                </a>
+                </button>
+                <a class="details" [routerLink]="['/memberships', plan.slug]">{{ i18n.t('homeMemberships.details') }}</a>
               </article>
             }
           </div>
         }
       </div>
     </section>
+
+    <app-lead-dialog [interest]="leadInterest()" [isOpen]="leadOpen()" (close)="leadOpen.set(false)" />
   `,
   styles: `
     .memberships { background: var(--background); }
@@ -92,7 +102,7 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
         border-radius: 9999px; padding: .3rem .8rem;
         font-size: .7rem; font-weight: 900;
       }
-      .desc { font-size: .88rem; font-weight: 700; color: rgba(245,245,247,.48); }
+      .desc { font-size: 1rem; font-weight: 700; color: rgba(245,245,247,.48); }
       h3 { margin-top: .5rem; font-size: 1.6rem; font-weight: 900; }
       .price {
         margin-block: 1.75rem;
@@ -100,7 +110,7 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
         strong { font-size: 3rem; font-weight: 900; letter-spacing: -1px; line-height: 1; }
         span { margin-bottom: .35rem; font-size: .85rem; color: rgba(245,245,247,.6); }
       }
-      .features { display: grid; gap: .9rem; margin-bottom: 2rem; font-size: .9rem; color: rgba(245,245,247,.76); }
+      .features { display: grid; gap: .9rem; margin-bottom: 2rem; font-size: 1rem; color: rgba(245,245,247,.76); }
       .features li { display: flex; align-items: center; gap: .7rem; }
       .check {
         display: grid; place-items: center;
@@ -114,6 +124,12 @@ import { SectionHeadComponent } from '../../../shared/section-head.component';
         font-size: .9rem; font-weight: 900;
         transition: all 160ms var(--ease-out);
         &.ghost { border: 1px solid rgba(245,245,247,.18); &:hover { border-color: var(--primary); background: rgba(245,245,247,.05); } }
+      }
+      .details {
+        margin-top: .75rem; text-align: center;
+        font-size: .88rem; color: var(--mp-muted);
+        transition: color 160ms var(--ease-out);
+        &:hover { color: var(--mp-white); }
       }
     }
   `,
@@ -129,8 +145,26 @@ export class MembershipsSectionComponent {
     this.loader.data().filter((p) => p.active).sort((a, b) => a.sortOrder - b.sortOrder).slice(0, 3),
   );
 
+  protected readonly leadOpen = signal(false);
+  protected readonly leadInterest = signal<string | null>(null);
+
+  protected choose(plan: MembershipPlan): void {
+    this.leadInterest.set(`${this.i18n.t('nav.memberships')}: ${this.i18n.pick(plan)}`);
+    this.leadOpen.set(true);
+  }
+
+  /** The short line above the plan name; hidden in Arabic when Odoo only has English text for it. */
+  protected descOf(plan: MembershipPlan): string {
+    const d = this.i18n.pick(plan, 'descriptionAr', 'descriptionEn');
+    return this.i18n.lang() === 'ar' && d && !/[\u0600-\u06FF]/.test(d) ? '' : d;
+  }
+
   protected featuresOf(plan: MembershipPlan): string[] {
-    const fallback = PLAN_FEATURES[plan.slug];
+    const ar = this.i18n.lang() === 'ar';
+    const own = ar ? plan.featuresAr : plan.featuresEn;
+    // Odoo may only carry an English line in featuresAr; use it only when it is really in the page language.
+    if (own?.length && (!ar || own.every((f) => /[\u0600-\u06FF]/.test(f)))) return own;
+    const fallback = PLAN_FEATURES[plan.slug] ?? PLAN_FEATURES[planKey(plan.nameEn)];
     if (fallback) {
       return this.i18n.lang() === 'ar' ? fallback.featuresAr : fallback.featuresEn;
     }

@@ -145,7 +145,9 @@ public class BookingEngineTests
         Assert.Equal(1, scheduleAfter.BookedCount); // seat transferred, not lost
         Assert.Equal(0, scheduleAfter.WaitingListCount);
 
-        var promoted = await db.Bookings.SingleAsync(b => b.CustomerId == customerB.Id && b.Status == BookingStatus.Reserved);
+        // The waiting-list booking itself becomes the seat; no second booking is left behind.
+        var promoted = await db.Bookings.SingleAsync(b => b.CustomerId == customerB.Id);
+        Assert.Equal(BookingStatus.Reserved, promoted.Status);
         Assert.Contains(notifications.Sent, n => n.Type == "waitlist.promoted");
     }
 

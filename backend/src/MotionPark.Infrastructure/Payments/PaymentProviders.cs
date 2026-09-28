@@ -28,15 +28,28 @@ public sealed class MockPaymentProvider(ILogger<MockPaymentProvider> logger) : I
     }
 }
 
-public sealed class PaymentProviderFactory(IConfiguration config, ILoggerFactory loggerFactory) : IPaymentProviderFactory
+public sealed class PaymentProviderFactory(
+    IConfiguration config, ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory) : IPaymentProviderFactory
 {
+    public const string MoyasarHttpClient = "moyasar";
+
     public IPaymentProvider GetProvider()
     {
         var provider = (config["PAYMENT_PROVIDER"] ?? string.Empty).Trim().ToLowerInvariant();
         return provider switch
         {
+            "moyasar" => new MoyasarPaymentProvider(httpClientFactory.CreateClient(MoyasarHttpClient),
+                MoyasarOptions.FromConfiguration(config), loggerFactory.CreateLogger<MoyasarPaymentProvider>()),
             "mock" => new MockPaymentProvider(loggerFactory.CreateLogger<MockPaymentProvider>()),
             _ => new NotConfiguredPaymentProvider(),
         };
+    }
+
+    public PaymentClientConfig GetClientConfig()
+    {
+        var provider = GetProvider();
+        if (provider is not MoyasarPaymentProvider) return new PaymentClientConfig(provider.Name, null, null);
+        var options = MoyasarOptions.FromConfiguration(config);
+        return new PaymentClientConfig(provider.Name, options.PublishableKey, options.CallbackUrl);
     }
 }

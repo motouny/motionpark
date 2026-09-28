@@ -99,12 +99,33 @@ public sealed class XmlRpcOdooClient : IOdooClient
         return null;
     }
 
+    public async Task UpdatePartnerAsync(string partnerId, Dictionary<string, object?> fields, CancellationToken ct = default)
+    {
+        if (!int.TryParse(partnerId, out var id))
+            throw new InvalidOperationException($"Odoo partner id '{partnerId}' is not numeric.");
+        // res.partner.write(ids, vals); Odoo 19 has no `mobile` field, so mobile goes to `phone`.
+        var vals = new Dictionary<string, object?>();
+        foreach (var (key, value) in fields)
+            vals[key == "mobile" ? "phone" : key] = value;
+        await ExecuteKwAsync("res.partner", "write", [new object?[] { id }, vals], new Dictionary<string, object?>(), ct);
+    }
+
     public async Task<Dictionary<string, object?>?> CreateSubscriptionAsync(
         Dictionary<string, object?> payload, CancellationToken ct = default)
     {
+        // args = [vals]: Odoo calls create_subscription(vals) and rejects anything but a dict.
         var result = await ExecuteKwAsync("motionpark.api", "create_subscription",
-            [new object?[] { payload }], new Dictionary<string, object?>(), ct);
+            [payload], new Dictionary<string, object?>(), ct);
         return result as Dictionary<string, object?>;
+    }
+
+    public async Task<string?> RegisterPaymentAsync(Dictionary<string, object?> vals, CancellationToken ct = default)
+    {
+        var result = await ExecuteKwAsync("motionpark.payment.transaction", "register_payment",
+            [vals], new Dictionary<string, object?>(), ct);
+        if (result is Dictionary<string, object?> d && d.TryGetValue("id", out var id) && id is not null)
+            return id.ToString();
+        return null;
     }
 
     public async Task<string?> CreateCrmLeadAsync(Dictionary<string, object?> fields, CancellationToken ct = default)
@@ -122,6 +143,8 @@ public sealed class XmlRpcOdooClient : IOdooClient
                 case "mobile": case "phone": vals["mobile"] = kv.Value; break;
                 case "description": vals["description"] = kv.Value; break;
                 case "lead_type": vals["lead_type"] = kv.Value; break;
+                case "partner_id": vals["partner_id"] = kv.Value; break;
+                case "external_uuid": vals["external_uuid"] = kv.Value; break;
             }
         }
         var result = await ExecuteKwAsync("motionpark.lead.sync", "create_lead",

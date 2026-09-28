@@ -1,11 +1,16 @@
+/** `GET /api/admin/dashboard` (AdminDashboardController). */
 export interface DashboardStats {
-  totalCustomers?: number;
-  totalBookings?: number;
-  totalLeads?: number;
+  customers?: number;
   activeMemberships?: number;
-  pendingBookings?: number;
-  newLeads?: number;
-  [key: string]: number | string | boolean | undefined;
+  pendingMemberships?: number;
+  bookingsToday?: number;
+  waitingList?: number;
+  leadsNew?: number;
+  schedulesUpcoming?: number;
+  mediaAssets?: number;
+  failedSyncJobs?: number;
+  pendingSyncJobs?: number;
+  generatedAt?: string;
 }
 
 export interface HealthStatus {

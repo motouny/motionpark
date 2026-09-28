@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 /** Signal-based data loader: `const { data, loading, error, reload } = createLoader(() => svc.list(), [])` */
 export function createLoader<T>(fetcher: () => Observable<T>, initial: T): {
@@ -12,10 +12,14 @@ export function createLoader<T>(fetcher: () => Observable<T>, initial: T): {
   const loading = signal(true);
   const error = signal(false);
 
+  let inFlight: Subscription | undefined;
+
+  // A reload cancels the previous request, so a slow earlier response can never overwrite newer data.
   const load = (): void => {
+    inFlight?.unsubscribe();
     loading.set(true);
     error.set(false);
-    fetcher().subscribe({
+    inFlight = fetcher().subscribe({
       next: (value) => {
         data.set(value);
         loading.set(false);

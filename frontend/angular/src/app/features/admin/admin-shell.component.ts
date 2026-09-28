@@ -25,7 +25,7 @@ interface NavGroup {
     <div class="admin-shell">
       <aside class="admin-sidebar">
         <a routerLink="/" class="brand">
-          <img src="assets/brand/logo-light.svg" alt="Motion Park" height="40" width="163" />
+          <img src="assets/brand/motion-park-logo-light-v2.png" alt="Motion Park" height="40" width="165" />
         </a>
 
         @for (group of nav(); track group.title) {

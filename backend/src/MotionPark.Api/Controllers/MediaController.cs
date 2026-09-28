@@ -147,16 +147,22 @@ public record UpdateMediaRequest(string? AltAr, string? AltEn, string? Title, st
 public class MediaFileController(IApplicationDbContext db, IConfiguration config) : ControllerBase
 {
     /// <summary>
-    /// Authorized file serving: returns X-Accel-Redirect for Nginx when MEDIA_X_ACCEL_PREFIX is set,
-    /// otherwise streams the file directly.
+    /// Public file serving for the media library (logos, banners, activity and coach photos), which the
+    /// website shows in plain &lt;img&gt; tags that cannot send a bearer token. Returns X-Accel-Redirect for
+    /// Nginx when MEDIA_X_ACCEL_PREFIX is set, otherwise streams the file directly.
     /// </summary>
     [HttpGet("{id:guid}/file")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> GetFile(Guid id, CancellationToken ct)
     {
         var asset = await db.MediaAssets.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id, ct);
         if (asset is null || !System.IO.File.Exists(asset.Path))
             return NotFound(new { error = new { code = "NOT_FOUND", message = "Media not found." } });
+
+        // An uploaded SVG opened directly must not run script on this origin.
+        Response.Headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers["Cache-Control"] = "public, max-age=86400";
 
         var accelPrefix = config["MEDIA_X_ACCEL_PREFIX"];
         if (!string.IsNullOrWhiteSpace(accelPrefix))
@@ -173,6 +179,6 @@ public class MediaFileController(IApplicationDbContext db, IConfiguration config
         }
 
         var stream = new FileStream(asset.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        return File(stream, asset.ContentType, asset.FileName);
+        return File(stream, asset.ContentType, enableRangeProcessing: true);
     }
 }

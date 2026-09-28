@@ -17,6 +17,8 @@ export interface MembershipPlan {
   branches: LookupRef[];
   activities: LookupRef[];
   featured: boolean;
+  featuresAr?: string[];
+  featuresEn?: string[];
   sortOrder: number;
   active: boolean;
 }

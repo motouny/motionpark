@@ -8,10 +8,11 @@ import { EmptyComponent } from '../../shared/empty.component';
 import { IconComponent } from '../../shared/icon.component';
 import { LoadingComponent } from '../../shared/loading.component';
 import { ToastService } from '../../shared/toast.service';
+import { HoursPipe } from '../../shared/hours.pipe';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, IconComponent, LoadingComponent, EmptyComponent],
+  imports: [HoursPipe, ReactiveFormsModule, IconComponent, LoadingComponent, EmptyComponent],
   template: `
     <section class="page-band">
       <div class="container">
@@ -72,7 +73,7 @@ import { ToastService } from '../../shared/toast.service';
                 @for (b of branches(); track b.id) {
                   <li>
                     <strong>{{ i18n.pick(b) }}</strong>
-                    <span>{{ b.operatingHours }}</span>
+                    <span>{{ b.operatingHours | hours:i18n.lang() }}</span>
                   </li>
                 }
               </ul>

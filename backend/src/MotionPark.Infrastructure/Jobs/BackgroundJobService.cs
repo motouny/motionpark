@@ -56,6 +56,9 @@ public sealed class BackgroundJobService(
         INotificationService notifications, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
+        var requeued = await SyncJobQueue.RequeueStuckAsync(db, now, ct);
+        if (requeued > 0) logger.LogWarning("Requeued {Count} sync jobs stuck in Processing", requeued);
+
         var jobs = await db.OdooSyncJobs
             .Where(j => (j.Status == IntegrationStatus.Pending || j.Status == IntegrationStatus.Error)
                 && j.Attempts < j.MaxAttempts
@@ -67,6 +70,7 @@ public sealed class BackgroundJobService(
         foreach (var job in jobs)
         {
             job.Status = IntegrationStatus.Processing;
+            job.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(ct);
             try
             {
@@ -124,81 +128,26 @@ public sealed class BackgroundJobService(
         }
     }
 
-    private async Task SyncPartnerAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo, CancellationToken ct)
+    private static async Task SyncPartnerAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo, CancellationToken ct)
     {
         var customerId = payload.TryGetProperty("customerId", out var c) && c.TryGetGuid(out var cg) ? cg : Guid.Empty;
         if (customerId == Guid.Empty) return;
-
-        var existingMapping = await db.OdooMappings.FirstOrDefaultAsync(
-            m => m.EntityType == "Customer" && m.LocalId == customerId, ct);
-        if (existingMapping is not null) return;
-
-        var customer = await db.Customers.FirstAsync(c => c.Id == customerId, ct);
-        var odooId = await odoo.CreatePartnerAsync(new Dictionary<string, object?>
-        {
-            ["name"] = customer.Name,
-            ["mobile"] = customer.Phone,
-            ["email"] = customer.Email ?? string.Empty,
-            ["ref"] = customer.Id.ToString(), // idempotency key on the Odoo side
-        }, ct);
-        if (string.IsNullOrWhiteSpace(odooId))
-            throw new OdooUnavailableException("Partner create returned no id.");
-
-        customer.OdooPartnerId = odooId;
-        db.OdooMappings.Add(new OdooMapping
-        {
-            EntityType = "Customer",
-            LocalId = customer.Id,
-            OdooId = odooId,
-            OdooModel = "res.partner",
-        });
-        await db.SaveChangesAsync(ct);
+        var update = payload.TryGetProperty("update", out var u) && u.ValueKind == JsonValueKind.True;
+        await OdooPartnerSync.SyncAsync(customerId, update, db, odoo, ct);
     }
 
-    private async Task CreateSubscriptionAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo,
+    private static async Task CreateSubscriptionAsync(JsonElement payload, IApplicationDbContext db, IOdooClient odoo,
         INotificationService notifications, CancellationToken ct)
     {
         var membershipId = payload.TryGetProperty("membershipId", out var m) && m.TryGetGuid(out var mg) ? mg : Guid.Empty;
         if (membershipId == Guid.Empty) return;
+        var transactionId = payload.TryGetProperty("transactionId", out var t) ? t.GetString() : null;
+
+        if (!await OdooSubscriptionSync.SyncAsync(membershipId, transactionId, db, odoo, ct)) return;
 
         var membership = await db.CustomerMemberships
             .Include(x => x.Customer).Include(x => x.MembershipPlan)
-            .FirstOrDefaultAsync(x => x.Id == membershipId, ct)
-            ?? throw new InvalidOperationException("Membership not found for subscription sync job.");
-
-        var existingMapping = await db.OdooMappings.FirstOrDefaultAsync(
-            x => x.EntityType == "CustomerMembership" && x.LocalId == membership.Id, ct);
-        if (existingMapping is not null)
-        {
-            membership.Status = SubscriptionStatus.Active;
-            await db.SaveChangesAsync(ct);
-            return;
-        }
-
-        var transactionId = payload.TryGetProperty("transactionId", out var t) ? t.GetString() : membership.Id.ToString();
-        var result = await odoo.CreateSubscriptionAsync(new Dictionary<string, object?>
-        {
-            ["customer_ref"] = membership.Customer.Id.ToString(),
-            ["partner_id"] = membership.Customer.OdooPartnerId ?? string.Empty,
-            ["plan_ref"] = membership.MembershipPlan.OdooProductId?.ToString() ?? membership.MembershipPlan.Slug,
-            ["transaction_id"] = transactionId,
-        }, ct) ?? throw new OdooUnavailableException("create_subscription returned no result.");
-
-        var odooSubId = result.TryGetValue("subscription_id", out var s) ? s?.ToString()
-            : result.TryGetValue("order_id", out var o) ? o?.ToString() : null;
-        if (string.IsNullOrWhiteSpace(odooSubId))
-            throw new OdooUnavailableException("create_subscription result carried no subscription id.");
-
-        membership.Status = SubscriptionStatus.Active;
-        membership.OdooSubscriptionId = odooSubId;
-        db.OdooMappings.Add(new OdooMapping
-        {
-            EntityType = "CustomerMembership",
-            LocalId = membership.Id,
-            OdooId = odooSubId,
-            OdooModel = "motionpark.subscription",
-        });
-        await db.SaveChangesAsync(ct);
+            .FirstAsync(x => x.Id == membershipId, ct);
         await notifications.NotifyAsync(membership.Customer.UserId, "membership.activated",
             "تم تفعيل عضويتك!", "Your membership is active!",
             membership.MembershipPlan.NameAr, membership.MembershipPlan.NameEn,
@@ -210,21 +159,7 @@ public sealed class BackgroundJobService(
         var leadId = payload.TryGetProperty("leadId", out var l) && l.TryGetGuid(out var lg) ? lg : Guid.Empty;
         if (leadId == Guid.Empty) return;
 
-        var lead = await db.Leads.FirstAsync(x => x.Id == leadId, ct);
-        if (!string.IsNullOrWhiteSpace(lead.OdooLeadId)) return;
-
-        var odooId = await odoo.CreateCrmLeadAsync(new Dictionary<string, object?>
-        {
-            ["external_reference"] = lead.Id.ToString(),
-            ["name"] = $"{lead.Name} [motionpark:{lead.Id:N}]",
-            ["lead_type"] = "membership_interest",
-            ["mobile"] = lead.Phone ?? string.Empty,
-            ["email"] = lead.Email ?? string.Empty,
-            ["description"] = lead.Message ?? string.Empty,
-        }, ct) ?? throw new OdooUnavailableException("CRM lead create returned no id.");
-
-        lead.OdooLeadId = odooId;
-        await db.SaveChangesAsync(ct);
+        await OdooLeadSync.SyncAsync(leadId, db, odoo, ct);
     }
 
     private async Task ExpireSubscriptionsAsync(IApplicationDbContext db, INotificationService notifications, CancellationToken ct)

@@ -15,13 +15,19 @@ interface StoryValue {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, IconComponent, SectionHeadComponent],
   template: `
-    <section id="story" class="light-surface section">
+    <section id="story" class="section story">
       <div class="container grid">
         <div class="visual">
-          <div class="art" aria-hidden="true">
-            <div class="art-gradient"></div>
-            <div class="art-ring"></div>
-            <div class="float-card">
+          <div class="art">
+            <picture>
+              <source type="image/webp" srcset="assets/images/motion-park-group-640.webp 640w, assets/images/motion-park-group-1040.webp 1040w" sizes="(min-width: 1024px) 560px, 100vw" />
+              <img src="assets/images/motion-park-group-1040.jpg"
+                srcset="assets/images/motion-park-group-640.jpg 640w, assets/images/motion-park-group-1040.jpg 1040w"
+                sizes="(min-width: 1024px) 560px, 100vw" width="1040" height="1300" loading="lazy" decoding="async"
+                [alt]="i18n.t('homeStory.photoAlt')" />
+            </picture>
+            <div class="art-shade" aria-hidden="true"></div>
+            <div class="float-card" aria-hidden="true">
               <span class="float-icon"><app-icon name="heart" size="1.25rem" /></span>
               <span>
                 <strong>{{ i18n.t('homeStory.cardTitle') }}</strong>
@@ -34,7 +40,7 @@ interface StoryValue {
         </div>
 
         <div class="copy">
-          <app-section-head [eyebrow]="i18n.t('homeStory.eyebrow')" [onLight]="true">
+          <app-section-head [eyebrow]="i18n.t('homeStory.eyebrow')">
             {{ titleA() }}<br />{{ titleB() }}
             <span class="accent">{{ titleC() }}</span>
           </app-section-head>
@@ -58,33 +64,31 @@ interface StoryValue {
     </section>
   `,
   styles: `
+    .story {
+      background:
+        radial-gradient(60% 50% at 85% 40%, rgba(138,43,226,.12), transparent 70%),
+        var(--mp-ink);
+      color: var(--mp-white);
+    }
     .grid {
       display: grid; gap: 3.5rem; align-items: center;
-      @media (min-width: 1024px) { grid-template-columns: 1.05fr .95fr; }
+      @media (min-width: 1024px) { grid-template-columns: 1.15fr .85fr; }
     }
-    .visual { position: relative; max-width: 560px; margin-inline: auto; width: 100%; }
+    .visual { position: relative; max-width: 640px; margin-inline: auto; width: 100%; }
     .art {
       position: relative; aspect-ratio: 4/5; overflow: hidden;
-      border-radius: 34px;
+      border-radius: 32px;
+      border: 1px solid rgba(245,245,247,.08);
       background:
         radial-gradient(circle at 80% 20%, rgba(255,64,129,.3), transparent 45%),
         radial-gradient(circle at 20% 85%, rgba(138,43,226,.35), transparent 45%),
         linear-gradient(30deg, rgba(18,18,24,.1), rgba(18,18,24,.78)),
         linear-gradient(150deg, #2a1a3e, #12121a 70%);
-      .art-gradient {
-        position: absolute; inset: 10% 18% 0 auto;
-        width: 46%;
-        border-radius: 100% 100% 0 0;
-        background: linear-gradient(160deg, #ff9a50, #ff4081 55%, #6d2ae2);
-        opacity: .92;
-        transform: skewX(-12deg);
-      }
-      .art-ring {
-        position: absolute; inset-inline-end: 23%; top: 18%;
-        width: 28%; height: 55%;
-        border-radius: 50% 50% 38% 38%;
-        border: 2px solid rgba(245,245,247,.45);
-        transform: rotate(14deg);
+      picture, img { position: absolute; inset: 0; width: 100%; height: 100%; }
+      img { object-fit: cover; object-position: center 35%; }
+      .art-shade {
+        position: absolute; inset: 0;
+        background: linear-gradient(0deg, rgba(18,18,24,.75) 0%, rgba(18,18,24,0) 45%);
       }
       .float-card {
         position: absolute; inset-inline: 1.5rem; bottom: 1.5rem;
@@ -107,25 +111,25 @@ interface StoryValue {
       position: absolute; top: 25%; inset-inline-start: -1.75rem;
       display: grid; place-items: center;
       width: 3rem; height: 3rem; border-radius: 16px;
-      background: #1A1A1A; color: #FF7A00;
-      box-shadow: 0 20px 40px rgba(0,0,0,.2);
+      background: var(--mp-surface); color: var(--mp-orange);
+      border: 1px solid rgba(245,245,247,.1);
     }
     .tag {
       position: absolute; bottom: 3.5rem; inset-inline-end: -1.25rem;
       background: var(--primary); color: #fff;
       border-radius: 14px; padding: .7rem 1rem;
       font-size: .88rem; font-weight: 900;
-      box-shadow: 0 16px 35px rgba(255,64,129,.35);
+      box-shadow: 0 12px 28px rgba(255,64,129,.22);
     }
-    .accent { color: var(--accent); }
-    .body { margin-top: 1.5rem; max-width: 520px; font-size: 1.05rem; line-height: 1.9; color: rgba(26,26,26,.7); }
+    .accent { color: var(--mp-fuchsia); }
+    .body { margin-top: 1.5rem; max-width: 520px; font-size: 1.05rem; line-height: 1.9; color: var(--mp-muted); }
     .values {
       margin-top: 2rem;
       display: grid; gap: 1.25rem;
       @media (min-width: 640px) { grid-template-columns: 1fr 1fr; }
       li { border-inline-start: 2px solid var(--primary); padding-inline-start: 1rem; }
       h3 { font-weight: 900; }
-      p { margin-top: .35rem; font-size: .88rem; line-height: 1.7; color: rgba(26,26,26,.6); }
+      p { margin-top: .35rem; font-size: 1rem; line-height: 1.7; color: var(--mp-muted); }
     }
     .more-link {
       margin-top: 2.25rem; display: inline-flex; align-items: center; gap: .5rem;

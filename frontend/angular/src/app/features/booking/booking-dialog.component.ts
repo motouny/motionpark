@@ -15,7 +15,7 @@ import { IconComponent } from '../../shared/icon.component';
           <button class="modal-close" (click)="cancel.emit()" [attr.aria-label]="i18n.t('common.close')">
             <app-icon name="close" size="1rem" />
           </button>
-          <img src="assets/brand/symbol.svg" alt="" width="44" height="44" />
+          <img src="assets/brand/motion-park-symbol-256.png" alt="" width="44" height="44" />
           <h2 class="title">{{ i18n.t('schedulePage.confirmTitle') }}</h2>
           <p class="body">{{ i18n.t('schedulePage.confirmBody') }}</p>
 

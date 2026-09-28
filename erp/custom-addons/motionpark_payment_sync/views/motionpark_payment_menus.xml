@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_motionpark_payment_transactions" name="Payments" parent="motionpark_core.menu_motionpark_root" action="motionpark_payment_transaction_action" sequence="50"/>
+</odoo>

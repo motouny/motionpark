@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="motionpark_subscription_view_list" model="ir.ui.view">
+        <field name="name">motionpark.subscription.list</field>
+        <field name="model">motionpark.subscription</field>
+        <field name="arch" type="xml">
+            <list string="Subscriptions" decoration-muted="status == 'cancelled'" decoration-danger="is_expired">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="membership_product_id"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="billing_cycle"/>
+                <field name="status"/>
+                <field name="payment_status"/>
+                <field name="is_expired" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="motionpark_subscription_view_form" model="ir.ui.view">
+        <field name="name">motionpark.subscription.form</field>
+        <field name="model">motionpark.subscription</field>
+        <field name="arch" type="xml">
+            <form string="Subscription">
+                <header>
+                    <button name="action_activate" type="object" string="Activate" class="btn-primary" invisible="status in ('active', 'expired', 'cancelled')"/>
+                    <button name="action_pause" type="object" string="Pause" invisible="status != 'active'"/>
+                    <button name="action_resume" type="object" string="Resume" invisible="status != 'paused'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="status == 'cancelled'"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,pending_payment,active,paused,expired,cancelled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="General">
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="membership_product_id"/>
+                            <field name="sale_order_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Billing">
+                            <field name="billing_cycle"/>
+                            <field name="payment_status"/>
+                            <field name="auto_renew"/>
+                            <field name="next_billing_date"/>
+                            <field name="last_billed_cycle_date"/>
+                        </group>
+                    </group>
+                    <group string="Validity">
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="is_expired"/>
+                        <field name="remaining_sessions"/>
+                    </group>
+                    <group string="Scope &amp; Integration">
+                        <field name="branch_ids" widget="many2many_tags"/>
+                        <field name="external_reference"/>
+                        <field name="cancel_reason" invisible="status != 'cancelled'"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="motionpark_subscription_view_search" model="ir.ui.view">
+        <field name="name">motionpark.subscription.search</field>
+        <field name="model">motionpark.subscription</field>
+        <field name="arch" type="xml">
+            <search string="Subscriptions">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="membership_product_id"/>
+                <field name="external_reference"/>
+                <separator/>
+                <filter string="Active" name="active" domain="[('status', '=', 'active')]"/>
+                <filter string="Pending Payment" name="pending_payment" domain="[('status', '=', 'pending_payment')]"/>
+                <filter string="Expired" name="expired" domain="[('status', '=', 'expired')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('status', '=', 'cancelled')]"/>
+                <separator/>
+                <filter string="Auto Renew" name="auto_renew" domain="[('auto_renew', '=', True)]"/>
+                <group>
+                    <filter string="Status" name="group_by_status" context="{'group_by': 'status'}"/>
+                    <filter string="Billing Cycle" name="group_by_billing_cycle" context="{'group_by': 'billing_cycle'}"/>
+                    <filter string="Partner" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="motionpark_subscription_action" model="ir.actions.act_window">
+        <field name="name">Subscriptions</field>
+        <field name="res_model">motionpark.subscription</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="motionpark_subscription_view_search"/>
+    </record>
+</odoo>

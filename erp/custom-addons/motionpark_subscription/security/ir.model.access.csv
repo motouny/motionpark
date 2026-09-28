@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_motionpark_subscription_user,motionpark.subscription user,model_motionpark_subscription,base.group_user,1,1,1,1
+access_motionpark_subscription_portal,motionpark.subscription portal,model_motionpark_subscription,base.group_portal,1,0,0,0

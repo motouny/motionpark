@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_motionpark_integration_logs" name="Integration Logs" parent="motionpark_core.menu_motionpark_root" action="motionpark_integration_log_action" sequence="90"/>
+    <menuitem id="menu_motionpark_sync_queue" name="Sync Queue" parent="motionpark_core.menu_motionpark_root" action="motionpark_sync_queue_action" sequence="91"/>
+</odoo>

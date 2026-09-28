@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_motionpark_subscriptions" name="Subscriptions" parent="motionpark_core.menu_motionpark_root" action="motionpark_subscription_action" sequence="10"/>
+</odoo>

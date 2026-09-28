@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="motionpark_activity_view_list" model="ir.ui.view">
+        <field name="name">motionpark.activity.list</field>
+        <field name="model">motionpark.activity</field>
+        <field name="arch" type="xml">
+            <list string="Activities">
+                <field name="name"/>
+                <field name="name_ar"/>
+                <field name="icon"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="motionpark_activity_view_form" model="ir.ui.view">
+        <field name="name">motionpark.activity.form</field>
+        <field name="model">motionpark.activity</field>
+        <field name="arch" type="xml">
+            <form string="Activity">
+                <sheet>
+                    <group>
+                        <group string="General">
+                            <field name="name"/>
+                            <field name="name_ar"/>
+                            <field name="icon"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Descriptions">
+                        <field name="description"/>
+                        <field name="description_ar"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="motionpark_activity_view_search" model="ir.ui.view">
+        <field name="name">motionpark.activity.search</field>
+        <field name="model">motionpark.activity</field>
+        <field name="arch" type="xml">
+            <search string="Activities">
+                <field name="name"/>
+                <field name="name_ar"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="motionpark_activity_action" model="ir.actions.act_window">
+        <field name="name">Activities</field>
+        <field name="res_model">motionpark.activity</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="motionpark_activity_view_search"/>
+    </record>
+</odoo>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_motionpark_bookings" name="Bookings" parent="motionpark_core.menu_motionpark_root" action="motionpark_booking_action" sequence="40"/>
+</odoo>

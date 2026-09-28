@@ -159,21 +159,7 @@ public sealed class BackgroundJobService(
         var leadId = payload.TryGetProperty("leadId", out var l) && l.TryGetGuid(out var lg) ? lg : Guid.Empty;
         if (leadId == Guid.Empty) return;
 
-        var lead = await db.Leads.FirstAsync(x => x.Id == leadId, ct);
-        if (!string.IsNullOrWhiteSpace(lead.OdooLeadId)) return;
-
-        var odooId = await odoo.CreateCrmLeadAsync(new Dictionary<string, object?>
-        {
-            ["external_reference"] = lead.Id.ToString(),
-            ["name"] = $"{lead.Name} [motionpark:{lead.Id:N}]",
-            ["lead_type"] = "membership_interest",
-            ["mobile"] = lead.Phone ?? string.Empty,
-            ["email"] = lead.Email ?? string.Empty,
-            ["description"] = lead.Message ?? string.Empty,
-        }, ct) ?? throw new OdooUnavailableException("CRM lead create returned no id.");
-
-        lead.OdooLeadId = odooId;
-        await db.SaveChangesAsync(ct);
+        await OdooLeadSync.SyncAsync(leadId, db, odoo, ct);
     }
 
     private async Task ExpireSubscriptionsAsync(IApplicationDbContext db, INotificationService notifications, CancellationToken ct)

@@ -143,6 +143,8 @@ public sealed class XmlRpcOdooClient : IOdooClient
                 case "mobile": case "phone": vals["mobile"] = kv.Value; break;
                 case "description": vals["description"] = kv.Value; break;
                 case "lead_type": vals["lead_type"] = kv.Value; break;
+                case "partner_id": vals["partner_id"] = kv.Value; break;
+                case "external_uuid": vals["external_uuid"] = kv.Value; break;
             }
         }
         var result = await ExecuteKwAsync("motionpark.lead.sync", "create_lead",

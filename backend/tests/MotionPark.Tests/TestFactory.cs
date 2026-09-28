@@ -108,8 +108,13 @@ public sealed class FakeOdooClient : IOdooClient
         PaymentPayloads.Add(vals);
         return Task.FromResult<string?>("501");
     }
+    public List<Dictionary<string, object?>> LeadPayloads { get; } = [];
     public Task<string?> CreateCrmLeadAsync(Dictionary<string, object?> fields, CancellationToken ct = default)
-        => Reachable ? Task.FromResult<string?>("2001") : throw new OdooUnavailableException("Odoo down");
+    {
+        if (!Reachable) throw new OdooUnavailableException("Odoo down");
+        LeadPayloads.Add(fields);
+        return Task.FromResult<string?>("2001");
+    }
 }
 
 public sealed class FakePaymentProvider(bool configured, bool succeeds = true) : IPaymentProvider
